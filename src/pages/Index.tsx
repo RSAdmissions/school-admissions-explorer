@@ -22,6 +22,7 @@ const Index = () => {
   const [screen, setScreen] = useState<"intro" | "tool">("intro");
   const [activeTab, setActiveTab] = useState<"map" | "eligibility">("map");
   const [catchmentResult, setCatchmentResult] = useState<CatchmentResult | null>(null);
+  const [formPostcode, setFormPostcode] = useState("");
 
   return (
     <AnimatePresence mode="wait">
@@ -249,7 +250,7 @@ const Index = () => {
                       Search your address to see which categories you may be eligible for.
                     </p>
                   </motion.div>
-                  <CatchmentMap onResult={setCatchmentResult} />
+                  <CatchmentMap onResult={setCatchmentResult} externalPostcode={formPostcode} />
 
                   {/* Persistent prompt to go to eligibility */}
                   <motion.div
@@ -301,7 +302,7 @@ const Index = () => {
                       Answer a few questions to find out which admission categories apply.
                     </p>
                   </motion.div>
-                  <EligibilityForm catchmentResult={catchmentResult} />
+                  <EligibilityForm catchmentResult={catchmentResult} onPostcodeChange={setFormPostcode} />
                 </motion.div>
               )}
             </AnimatePresence>

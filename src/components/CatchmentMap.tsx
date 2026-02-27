@@ -44,9 +44,10 @@ export interface CatchmentResult {
 
 interface CatchmentMapProps {
   onResult?: (result: CatchmentResult | null) => void;
+  externalPostcode?: string;
 }
 
-const CatchmentMap = ({ onResult }: CatchmentMapProps) => {
+const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -161,8 +162,8 @@ const CatchmentMap = ({ onResult }: CatchmentMapProps) => {
     });
   }, [activeCategories]);
 
-  const handleSearch = async () => {
-    const q = searchQuery.trim();
+  const handleSearch = async (queryOverride?: string) => {
+    const q = (queryOverride ?? searchQuery).trim();
     if (!q) return;
     setIsSearching(true);
     setSearchError(null);
@@ -216,6 +217,16 @@ const CatchmentMap = ({ onResult }: CatchmentMapProps) => {
     }
   };
 
+  // Sync external postcode from eligibility form
+  const lastExternalRef = useRef<string>("");
+  useEffect(() => {
+    if (externalPostcode && externalPostcode !== lastExternalRef.current && externalPostcode.length >= 3) {
+      lastExternalRef.current = externalPostcode;
+      setSearchQuery(externalPostcode);
+      handleSearch(externalPostcode);
+    }
+  }, [externalPostcode]);
+
   const clearSearch = () => {
     setSearchQuery("");
     setSearchResult(null);
@@ -260,7 +271,7 @@ const CatchmentMap = ({ onResult }: CatchmentMapProps) => {
                   </button>
                 )}
                 <button
-                  onClick={handleSearch}
+                  onClick={() => handleSearch()}
                   disabled={isSearching}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
                 >
