@@ -1,183 +1,312 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ClipboardCheck, ArrowRight, GraduationCap, Shield } from "lucide-react";
 import CatchmentMap from "@/components/CatchmentMap";
 import EligibilityForm from "@/components/EligibilityForm";
 import type { CatchmentResult } from "@/components/CatchmentMap";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.12, duration: 0.5, ease: "easeOut" as const },
+  }),
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
 
 const Index = () => {
   const [screen, setScreen] = useState<"intro" | "tool">("intro");
   const [activeTab, setActiveTab] = useState<"map" | "eligibility">("map");
   const [catchmentResult, setCatchmentResult] = useState<CatchmentResult | null>(null);
 
-  if (screen === "intro") {
-    return (
-      <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
-        {/* Animated background orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] animate-float-slow" />
-          <div className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full bg-primary/8 blur-[150px] animate-float-slower" />
-          <div className="absolute top-[30%] right-[20%] w-[300px] h-[300px] rounded-full bg-accent/5 blur-[100px] animate-float-medium" />
-        </div>
-
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
-        }} />
-
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-12">
-          {/* Header badge */}
-          <div className="flex justify-center mb-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-xs font-body font-medium text-muted-foreground">
-              <Shield className="h-3.5 w-3.5 text-primary" />
-              Official Admissions Tool
-            </div>
-          </div>
-
-          {/* Main title */}
-          <div className="text-center mb-12 animate-fade-in" style={{ animationDelay: '100ms' }}>
-            <h1 className="text-4xl md:text-6xl font-heading font-bold text-foreground leading-tight mb-4">
-              Reading School
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground font-body max-w-xl mx-auto leading-relaxed">
-              Explore catchment areas and check your child's admission eligibility
-            </p>
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <span className="h-px w-12 bg-border" />
-              <span className="text-[11px] text-muted-foreground font-body uppercase tracking-[0.2em]">Est. 1125</span>
-              <span className="h-px w-12 bg-border" />
-            </div>
-          </div>
-
-          {/* Feature cards */}
-          <div className="grid md:grid-cols-2 gap-4 mb-10 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <div className="glass-card rounded-2xl p-6 group hover:border-primary/30 transition-all cursor-default">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <MapPin className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-heading font-bold text-foreground mb-2">Interactive Map</h3>
-              <p className="text-sm text-muted-foreground font-body leading-relaxed">
-                Search your address and instantly see which catchment categories apply. Visualise Category 3, 4 & 5 boundaries.
-              </p>
-            </div>
-
-            <div className="glass-card rounded-2xl p-6 group hover:border-primary/30 transition-all cursor-default">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <ClipboardCheck className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-heading font-bold text-foreground mb-2">Eligibility Checker</h3>
-              <p className="text-sm text-muted-foreground font-body leading-relaxed">
-                Answer a few questions to find out which admission categories your child may qualify for, with indicative place numbers.
-              </p>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="flex justify-center animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <button
-              onClick={() => setScreen("tool")}
-              className="group relative px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-body text-base font-semibold hover:shadow-[0_0_40px_hsl(var(--primary)/0.3)] transition-all duration-300 flex items-center gap-3"
-            >
-              <GraduationCap className="h-5 w-5" />
-              Get Started
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-
-          {/* Disclaimer */}
-          <p className="text-center text-[11px] text-muted-foreground/60 font-body mt-10 max-w-md mx-auto animate-fade-in" style={{ animationDelay: '400ms' }}>
-            This tool provides indicative information only. Please refer to the official admissions policy for definitive guidance.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Header with tabs */}
-      <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
-            <button onClick={() => setScreen("intro")} className="flex items-center gap-2 group">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              <span className="text-base font-heading font-bold text-foreground group-hover:text-primary transition-colors">
-                Reading School
-              </span>
-            </button>
-
-            {/* Tab switcher */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary/50 border border-border/50">
-              <button
-                onClick={() => setActiveTab("map")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-body font-semibold transition-all ${
-                  activeTab === "map"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Map
-              </button>
-              <button
-                onClick={() => setActiveTab("eligibility")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-body font-semibold transition-all ${
-                  activeTab === "eligibility"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <ClipboardCheck className="h-3.5 w-3.5" />
-                Eligibility
-              </button>
-            </div>
+    <AnimatePresence mode="wait">
+      {screen === "intro" ? (
+        <motion.div
+          key="intro"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.4 }}
+          className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center"
+        >
+          {/* Animated background orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.05, 1] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]"
+            />
+            <motion.div
+              animate={{ x: [0, -20, 0], y: [0, 30, 0], scale: [1, 1.08, 1] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full bg-primary/8 blur-[150px]"
+            />
+            <motion.div
+              animate={{ x: [0, 15, 0], y: [0, 15, 0], scale: [1, 1.03, 1] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-[30%] right-[20%] w-[300px] h-[300px] rounded-full bg-accent/5 blur-[100px]"
+            />
           </div>
-        </div>
-      </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-6">
-        {activeTab === "map" && (
-          <div className="animate-fade-in">
-            <div className="mb-5">
-              <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Catchment Areas</h2>
-              <p className="text-sm text-muted-foreground font-body">
-                Search your address to see which categories you may be eligible for.
-              </p>
-            </div>
-            <CatchmentMap onResult={setCatchmentResult} />
-            {catchmentResult && catchmentResult.categories.length > 0 && (
-              <div className="mt-4 flex justify-center animate-fade-in">
-                <button
-                  onClick={() => setActiveTab("eligibility")}
-                  className="inline-flex items-center gap-2 px-6 py-3 glass-card rounded-xl text-sm font-body font-semibold text-primary hover:bg-primary/10 transition-all"
-                >
-                  Continue to Eligibility Checker
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+              backgroundSize: "60px 60px",
+            }}
+          />
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="visible"
+            className="relative z-10 w-full max-w-4xl mx-auto px-6 py-12"
+          >
+            {/* Badge */}
+            <motion.div variants={fadeUp} custom={0} className="flex justify-center mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-xs font-body font-medium text-muted-foreground">
+                <Shield className="h-3.5 w-3.5 text-primary" />
+                Official Admissions Tool
               </div>
-            )}
-          </div>
-        )}
+            </motion.div>
 
-        {activeTab === "eligibility" && (
-          <div className="animate-fade-in max-w-2xl mx-auto">
-            <div className="mb-5">
-              <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Check Your Eligibility</h2>
-              <p className="text-sm text-muted-foreground font-body">
-                Answer a few questions to find out which admission categories apply.
+            {/* Title */}
+            <motion.div variants={fadeUp} custom={1} className="text-center mb-12">
+              <h1 className="text-4xl md:text-6xl font-heading font-bold text-foreground leading-tight mb-4">
+                Reading School
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground font-body max-w-xl mx-auto leading-relaxed">
+                Explore catchment areas and check your child's admission eligibility
               </p>
-            </div>
-            <EligibilityForm catchmentResult={catchmentResult} />
-          </div>
-        )}
-      </main>
+              <motion.div
+                variants={fadeUp}
+                custom={2}
+                className="flex items-center justify-center gap-3 mt-4"
+              >
+                <motion.span
+                  initial={{ width: 0 }}
+                  animate={{ width: 48 }}
+                  transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
+                  className="h-px bg-border block"
+                />
+                <span className="text-[11px] text-muted-foreground font-body uppercase tracking-[0.2em]">
+                  Est. 1125
+                </span>
+                <motion.span
+                  initial={{ width: 0 }}
+                  animate={{ width: 48 }}
+                  transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
+                  className="h-px bg-border block"
+                />
+              </motion.div>
+            </motion.div>
 
-      <footer className="border-t border-border py-6 text-center">
-        <p className="text-[11px] text-muted-foreground font-body">
-          Indicative information only. Refer to the official Reading School admissions policy.
-        </p>
-      </footer>
-    </div>
+            {/* Feature cards */}
+            <div className="grid md:grid-cols-2 gap-4 mb-10">
+              {[
+                {
+                  icon: MapPin,
+                  title: "Interactive Map",
+                  desc: "Search your address and instantly see which catchment categories apply. Visualise Category 3, 4 & 5 boundaries.",
+                },
+                {
+                  icon: ClipboardCheck,
+                  title: "Eligibility Checker",
+                  desc: "Answer a few questions to find out which admission categories your child may qualify for, with indicative place numbers.",
+                },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.title}
+                  variants={fadeUp}
+                  custom={3 + i}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="glass-card rounded-2xl p-6 group cursor-default"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4"
+                  >
+                    <card.icon className="h-6 w-6 text-primary" />
+                  </motion.div>
+                  <h3 className="text-lg font-heading font-bold text-foreground mb-2">{card.title}</h3>
+                  <p className="text-sm text-muted-foreground font-body leading-relaxed">{card.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <motion.div variants={fadeUp} custom={5} className="flex justify-center">
+              <motion.button
+                whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(330 100% 80% / 0.25)" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setScreen("tool")}
+                className="group relative px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-body text-base font-semibold transition-colors duration-300 flex items-center gap-3"
+              >
+                <GraduationCap className="h-5 w-5" />
+                Get Started
+                <motion.span
+                  className="inline-block"
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </motion.span>
+              </motion.button>
+            </motion.div>
+
+            {/* Disclaimer */}
+            <motion.p
+              variants={fadeUp}
+              custom={6}
+              className="text-center text-[11px] text-muted-foreground/60 font-body mt-10 max-w-md mx-auto"
+            >
+              This tool provides indicative information only. Please refer to the official admissions policy for definitive guidance.
+            </motion.p>
+          </motion.div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="tool"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="min-h-screen bg-background"
+        >
+          {/* Header */}
+          <motion.header
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl"
+          >
+            <div className="container max-w-6xl mx-auto px-4">
+              <div className="flex items-center justify-between py-3">
+                <button onClick={() => setScreen("intro")} className="flex items-center gap-2 group">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <span className="text-base font-heading font-bold text-foreground group-hover:text-primary transition-colors">
+                    Reading School
+                  </span>
+                </button>
+
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary/50 border border-border/50 relative">
+                  {/* Animated pill background */}
+                  <motion.div
+                    className="absolute top-1 bottom-1 rounded-lg bg-primary shadow-sm"
+                    layout
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    style={{
+                      left: activeTab === "map" ? 4 : "50%",
+                      right: activeTab === "eligibility" ? 4 : "50%",
+                    }}
+                  />
+                  <button
+                    onClick={() => setActiveTab("map")}
+                    className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-body font-semibold transition-colors ${
+                      activeTab === "map" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    Map
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("eligibility")}
+                    className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-body font-semibold transition-colors ${
+                      activeTab === "eligibility" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ClipboardCheck className="h-3.5 w-3.5" />
+                    Eligibility
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.header>
+
+          <main className="container max-w-6xl mx-auto px-4 py-6">
+            <AnimatePresence mode="wait">
+              {activeTab === "map" && (
+                <motion.div
+                  key="map"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="mb-5"
+                  >
+                    <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Catchment Areas</h2>
+                    <p className="text-sm text-muted-foreground font-body">
+                      Search your address to see which categories you may be eligible for.
+                    </p>
+                  </motion.div>
+                  <CatchmentMap onResult={setCatchmentResult} />
+                  <AnimatePresence>
+                    {catchmentResult && catchmentResult.categories.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="mt-4 flex justify-center"
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setActiveTab("eligibility")}
+                          className="inline-flex items-center gap-2 px-6 py-3 glass-card rounded-xl text-sm font-body font-semibold text-primary hover:bg-primary/10 transition-colors"
+                        >
+                          Continue to Eligibility Checker
+                          <ArrowRight className="h-4 w-4" />
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+
+              {activeTab === "eligibility" && (
+                <motion.div
+                  key="eligibility"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="max-w-2xl mx-auto"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="mb-5"
+                  >
+                    <h2 className="text-2xl font-heading font-bold text-foreground mb-1">Check Your Eligibility</h2>
+                    <p className="text-sm text-muted-foreground font-body">
+                      Answer a few questions to find out which admission categories apply.
+                    </p>
+                  </motion.div>
+                  <EligibilityForm catchmentResult={catchmentResult} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+
+          <footer className="border-t border-border py-6 text-center">
+            <p className="text-[11px] text-muted-foreground font-body">
+              Indicative information only. Refer to the official Reading School admissions policy.
+            </p>
+          </footer>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

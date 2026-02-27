@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, AlertCircle, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
 import type { CatchmentResult } from "./CatchmentMap";
 
@@ -109,8 +110,13 @@ function calculateEligibility(data: FormData): EligibilityResult {
   return { categories };
 }
 
-// Step indicator
 const STEPS = ["About You", "Circumstances", "School & Location"];
+
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -60 : 60, opacity: 0 }),
+};
 
 interface EligibilityFormProps {
   catchmentResult?: CatchmentResult | null;
@@ -118,7 +124,8 @@ interface EligibilityFormProps {
 
 const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
   const [acknowledged, setAcknowledged] = useState(false);
-  const [step, setStep] = useState(0); // 0=gate, 1-3=form steps, 4=results
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     dob: "",
     placeType: "",
@@ -139,8 +146,14 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const goTo = (s: number) => {
+    setDirection(s > step ? 1 : -1);
+    setStep(s);
+  };
+
   const handleSubmit = () => {
     setResult(calculateEligibility(formData));
+    setDirection(1);
     setStep(4);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -152,12 +165,23 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
   // Gate
   if (step === 0) {
     return (
-      <div ref={formRef} className="bg-card border border-border rounded-xl overflow-hidden">
+      <motion.div
+        ref={formRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
         <div className="p-6 md:p-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+            >
               <AlertCircle className="h-5 w-5 text-primary" />
-            </div>
+            </motion.div>
             <div>
               <h3 className="text-lg font-heading font-bold text-foreground">Before You Begin</h3>
               <p className="text-xs text-muted-foreground font-body">Please read carefully</p>
@@ -168,7 +192,11 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
             a place at Reading School. Category eligibility and place availability are subject to change. 
             You must read the official admissions policy for definitive guidance.
           </p>
-          <label className="flex items-start gap-3 p-4 bg-secondary/50 rounded-lg cursor-pointer group hover:bg-secondary transition-colors mb-6">
+          <motion.label
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="flex items-start gap-3 p-4 bg-secondary/50 rounded-lg cursor-pointer group hover:bg-secondary transition-colors mb-6"
+          >
             <input
               type="checkbox"
               checked={acknowledged}
@@ -178,29 +206,42 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
             <span className="text-sm font-body text-foreground leading-relaxed">
               I understand this is indicative only and will read the official admissions policy.
             </span>
-          </label>
-          <button
+          </motion.label>
+          <motion.button
+            whileHover={acknowledged ? { scale: 1.02 } : {}}
+            whileTap={acknowledged ? { scale: 0.98 } : {}}
             disabled={!acknowledged}
-            onClick={() => setStep(1)}
-            className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+            onClick={() => goTo(1)}
+            className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             Start Eligibility Check
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
+            <ArrowRight className="h-4 w-4" />
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   // Results
   if (step === 4 && result) {
     return (
-      <div ref={formRef} className="bg-card border border-border rounded-xl overflow-hidden animate-fade-in">
+      <motion.div
+        ref={formRef}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
         <div className="p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+            >
               <Sparkles className="h-5 w-5 text-primary" />
-            </div>
+            </motion.div>
             <div>
               <h3 className="text-lg font-heading font-bold text-foreground">Your Results</h3>
               <p className="text-xs text-muted-foreground font-body">Based on the information you provided</p>
@@ -208,23 +249,35 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
           </div>
 
           {result.categories.length === 0 ? (
-            <div className="p-5 bg-secondary/50 rounded-lg flex items-start gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-5 bg-secondary/50 rounded-lg flex items-start gap-3"
+            >
               <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
               <p className="text-sm font-body text-muted-foreground">
-                Based on the information provided, this postcode doesn't appear to fall within any catchment category.
+                This postcode doesn't appear to fall within any catchment category.
               </p>
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-3">
               {result.categories.map((cat, i) => (
-                <div
+                <motion.div
                   key={cat.name}
-                  className="p-4 bg-secondary/50 rounded-lg border border-border animate-fade-in"
-                  style={{ animationDelay: `${i * 100}ms` }}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + i * 0.1, duration: 0.35 }}
+                  className="p-4 bg-secondary/50 rounded-lg border border-border"
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3 + i * 0.1, type: "spring" }}
+                      >
+                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                      </motion.div>
                       <span className="font-semibold font-body text-sm text-foreground">{cat.name}</span>
                     </div>
                     {PLACES_INFO[cat.name] && (
@@ -246,182 +299,252 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
 
           <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => { setStep(1); setResult(null); }}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => { goTo(1); setResult(null); }}
               className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all"
             >
               Start Over
-            </button>
+            </motion.button>
           </div>
 
           <p className="text-[11px] text-muted-foreground font-body italic mt-4">
             ⚠️ Indicative only. Place numbers are approximate and subject to change.
           </p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   // Multi-step form
   return (
     <div ref={formRef} className="bg-card border border-border rounded-xl overflow-hidden">
-      {/* Progress bar */}
+      {/* Progress */}
       <div className="px-6 pt-6 md:px-8 md:pt-8">
         <div className="flex items-center gap-2 mb-6">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <button
-                onClick={() => { if (i + 1 < step) setStep(i + 1); }}
+                onClick={() => { if (i + 1 < step) goTo(i + 1); }}
                 className={`flex items-center gap-2 text-xs font-body font-medium transition-colors ${
                   i + 1 === step ? "text-primary" : i + 1 < step ? "text-foreground cursor-pointer" : "text-muted-foreground"
                 }`}
               >
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold transition-all ${
-                    i + 1 === step
-                      ? "bg-primary text-primary-foreground"
-                      : i + 1 < step
-                      ? "bg-primary/20 text-primary"
-                      : "bg-secondary text-muted-foreground"
-                  }`}
+                <motion.span
+                  animate={{
+                    backgroundColor:
+                      i + 1 === step
+                        ? "hsl(330 100% 80%)"
+                        : i + 1 < step
+                        ? "hsl(330 100% 80% / 0.2)"
+                        : "hsl(220 35% 22%)",
+                    color:
+                      i + 1 === step
+                        ? "hsl(220 40% 13%)"
+                        : i + 1 < step
+                        ? "hsl(330 100% 80%)"
+                        : "hsl(215 20% 65%)",
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold"
                 >
                   {i + 1 < step ? "✓" : i + 1}
-                </span>
+                </motion.span>
                 <span className="hidden sm:inline">{s}</span>
               </button>
               {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-px transition-colors ${i + 1 < step ? "bg-primary/40" : "bg-border"}`} />
+                <motion.div
+                  className="flex-1 h-px"
+                  animate={{ backgroundColor: i + 1 < step ? "hsl(330 100% 80% / 0.4)" : "hsl(220 30% 25%)" }}
+                  transition={{ duration: 0.3 }}
+                />
               )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="px-6 pb-6 md:px-8 md:pb-8">
-        {/* Step 1: About You */}
-        {step === 1 && (
-          <div className="space-y-5 animate-fade-in">
-            <div>
-              <label className={labelClass}>Date of Birth</label>
-              <input type="date" value={formData.dob} onChange={(e) => handleChange("dob", e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Interested in</label>
-              <div className="grid grid-cols-2 gap-3">
-                {(["day", "boarding"] as const).map((type) => (
-                  <button
-                    key={type}
+      <div className="px-6 pb-6 md:px-8 md:pb-8 overflow-hidden">
+        <AnimatePresence mode="wait" custom={direction}>
+          {/* Step 1 */}
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-5"
+            >
+              <div>
+                <label className={labelClass}>Date of Birth</label>
+                <input type="date" value={formData.dob} onChange={(e) => handleChange("dob", e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Interested in</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["day", "boarding"] as const).map((type) => (
+                    <motion.button
+                      key={type}
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleChange("placeType", type)}
+                      className={`p-4 rounded-lg border text-sm font-body font-medium text-center transition-colors ${
+                        formData.placeType === type
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-secondary/50 text-muted-foreground hover:border-primary/30"
+                      }`}
+                    >
+                      {type === "day" ? "🏠 Day Place" : "🛏️ Boarding Place"}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+              <motion.button
+                whileHover={formData.dob && formData.placeType ? { scale: 1.02 } : {}}
+                whileTap={formData.dob && formData.placeType ? { scale: 0.98 } : {}}
+                onClick={() => goTo(2)}
+                disabled={!formData.dob || !formData.placeType}
+                className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Continue <ChevronRight className="h-4 w-4" />
+              </motion.button>
+            </motion.div>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <motion.div
+              key="step2"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-4"
+            >
+              <p className="text-sm text-muted-foreground font-body">Select all that apply:</p>
+              <div className="space-y-2">
+                {[
+                  { key: "hasEHCP" as const, label: "Has an EHCP", emoji: "📋" },
+                  { key: "isLookedAfter" as const, label: "Looked After / Previously Looked After", emoji: "🏡" },
+                  { key: "isPupilPremium" as const, label: "Eligible for Pupil Premium", emoji: "💰" },
+                  { key: "isServicePremium" as const, label: "Eligible for Service Premium", emoji: "🎖️" },
+                  { key: "hasSocialWelfare" as const, label: "Social or Welfare need", emoji: "❤️" },
+                  { key: "hasTwin" as const, label: "Twin applying same year", emoji: "👥" },
+                  { key: "hasParentStaff" as const, label: "Parent works at the school", emoji: "🏫" },
+                ].map(({ key, label, emoji }, i) => (
+                  <motion.button
+                    key={key}
                     type="button"
-                    onClick={() => handleChange("placeType", type)}
-                    className={`p-4 rounded-lg border text-sm font-body font-medium text-center transition-all ${
-                      formData.placeType === type
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-secondary/50 text-muted-foreground hover:border-primary/30"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => handleChange(key, !formData[key])}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-sm font-body text-left transition-colors ${
+                      formData[key]
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/30"
                     }`}
                   >
-                    {type === "day" ? "🏠 Day Place" : "🛏️ Boarding Place"}
-                  </button>
+                    <span className="text-base">{emoji}</span>
+                    <span className="flex-1">{label}</span>
+                    <AnimatePresence>
+                      {formData[key] && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
                 ))}
               </div>
-            </div>
-            <button
-              onClick={() => setStep(2)}
-              disabled={!formData.dob || !formData.placeType}
-              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              <div className="flex gap-3 pt-2">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(1)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
+                  Back
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(3)} className="flex-1 py-3 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                  Continue <ChevronRight className="h-4 w-4" />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 3 */}
+          {step === 3 && (
+            <motion.div
+              key="step3"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-5"
             >
-              Continue <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Circumstances */}
-        {step === 2 && (
-          <div className="space-y-4 animate-fade-in">
-            <p className="text-sm text-muted-foreground font-body">Select all that apply:</p>
-            <div className="space-y-2">
-              {[
-                { key: "hasEHCP" as const, label: "Has an EHCP", emoji: "📋" },
-                { key: "isLookedAfter" as const, label: "Looked After / Previously Looked After", emoji: "🏡" },
-                { key: "isPupilPremium" as const, label: "Eligible for Pupil Premium", emoji: "💰" },
-                { key: "isServicePremium" as const, label: "Eligible for Service Premium", emoji: "🎖️" },
-                { key: "hasSocialWelfare" as const, label: "Social or Welfare need", emoji: "❤️" },
-                { key: "hasTwin" as const, label: "Twin applying same year", emoji: "👥" },
-                { key: "hasParentStaff" as const, label: "Parent works at the school", emoji: "🏫" },
-              ].map(({ key, label, emoji }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleChange(key, !formData[key])}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-sm font-body text-left transition-all ${
-                    formData[key]
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/30"
-                  }`}
+              <div>
+                <label className={labelClass}>Primary School</label>
+                <select value={formData.primarySchool} onChange={(e) => handleChange("primarySchool", e.target.value)} className={inputClass}>
+                  {PRIMARY_SCHOOLS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Postcode</label>
+                <input
+                  type="text"
+                  value={formData.postcode}
+                  onChange={(e) => handleChange("postcode", e.target.value)}
+                  placeholder="e.g. RG1 5AG"
+                  className={inputClass}
+                />
+                {catchmentResult && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-[11px] text-primary font-body mt-1.5"
+                  >
+                    ✓ Pre-filled from your map search
+                  </motion.p>
+                )}
+              </div>
+              <div className="flex gap-3 pt-2">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(2)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
+                  Back
+                </motion.button>
+                <motion.button
+                  whileHover={formData.postcode ? { scale: 1.02 } : {}}
+                  whileTap={formData.postcode ? { scale: 0.98 } : {}}
+                  onClick={handleSubmit}
+                  disabled={!formData.postcode}
+                  className="flex-1 py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <span className="text-base">{emoji}</span>
-                  <span className="flex-1">{label}</span>
-                  {formData[key] && <CheckCircle className="h-4 w-4 text-primary shrink-0" />}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setStep(1)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
-                Back
-              </button>
-              <button onClick={() => setStep(3)} className="flex-1 py-3 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                Continue <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: School & Location */}
-        {step === 3 && (
-          <div className="space-y-5 animate-fade-in">
-            <div>
-              <label className={labelClass}>Primary School</label>
-              <select value={formData.primarySchool} onChange={(e) => handleChange("primarySchool", e.target.value)} className={inputClass}>
-                {PRIMARY_SCHOOLS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Postcode</label>
-              <input
-                type="text"
-                value={formData.postcode}
-                onChange={(e) => handleChange("postcode", e.target.value)}
-                placeholder="e.g. RG1 5AG"
-                className={inputClass}
-              />
-              {catchmentResult && (
-                <p className="text-[11px] text-primary font-body mt-1.5">
-                  ✓ Pre-filled from your map search
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setStep(2)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
-                Back
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={!formData.postcode}
-                className="flex-1 py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Sparkles className="h-4 w-4" />
-                Check Eligibility
-              </button>
-            </div>
-          </div>
-        )}
+                  <Sparkles className="h-4 w-4" />
+                  Check Eligibility
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
