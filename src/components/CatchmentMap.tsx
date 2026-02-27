@@ -237,8 +237,8 @@ const CatchmentMap = ({ onResult }: CatchmentMapProps) => {
   return (
     <div className="space-y-0">
       {/* Floating search bar overlaid on map */}
-      <div className="relative">
-        <div ref={mapRef} className="w-full h-[560px] rounded-lg overflow-hidden" />
+      <div className="relative z-0">
+        <div ref={mapRef} className="w-full h-[560px] rounded-lg overflow-hidden relative z-0" />
 
         {/* Search overlay */}
         <div className="absolute top-4 left-4 right-4 z-[1000]">
