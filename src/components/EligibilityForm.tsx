@@ -226,12 +226,13 @@ const pageVariants = {
 
 interface EligibilityFormProps {
   catchmentResult?: CatchmentResult | null;
+  onPostcodeChange?: (postcode: string) => void;
 }
 
 // Total questions: 0=gate, 1=dob, 2=placeType, 3=EHCP, 4=circumstances, 5=sporting, 6=school, 7=postcode, 8=results
 const TOTAL_QUESTIONS = 8;
 
-const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
+const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormProps) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -254,6 +255,9 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "postcode" && typeof value === "string") {
+      onPostcodeChange?.(value);
+    }
   };
 
   const goTo = (s: number) => {
