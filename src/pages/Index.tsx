@@ -250,26 +250,34 @@ const Index = () => {
                     </p>
                   </motion.div>
                   <CatchmentMap onResult={setCatchmentResult} />
-                  <AnimatePresence>
-                    {catchmentResult && catchmentResult.categories.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="mt-4 flex justify-center"
-                      >
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setActiveTab("eligibility")}
-                          className="inline-flex items-center gap-2 px-6 py-3 glass-card rounded-xl text-sm font-body font-semibold text-primary hover:bg-primary/10 transition-colors"
-                        >
-                          Continue to Eligibility Checker
-                          <ArrowRight className="h-4 w-4" />
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+
+                  {/* Persistent prompt to go to eligibility */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-6 p-5 glass-card rounded-2xl flex flex-col sm:flex-row items-center gap-4"
+                  >
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="text-sm font-body font-semibold text-foreground">
+                        Ready to check eligibility?
+                      </p>
+                      <p className="text-xs text-muted-foreground font-body mt-0.5">
+                        {catchmentResult
+                          ? `We've noted your postcode (${catchmentResult.postcode}). Continue to see which categories apply.`
+                          : "Answer a few questions to see which admission categories your child may qualify for."}
+                      </p>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setActiveTab("eligibility")}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl text-sm font-body font-semibold hover:opacity-90 transition-all whitespace-nowrap"
+                    >
+                      Check Eligibility
+                      <ArrowRight className="h-4 w-4" />
+                    </motion.button>
+                  </motion.div>
                 </motion.div>
               )}
 

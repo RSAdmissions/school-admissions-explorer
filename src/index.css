@@ -190,3 +190,17 @@
 .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
 .animate-float-slower { animation: float-slower 12s ease-in-out infinite; }
 .animate-float-medium { animation: float-medium 10s ease-in-out infinite; }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}

@@ -1,19 +1,108 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, AlertCircle, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Calendar,
+  Home,
+  School,
+  MapPin as MapPinIcon,
+  Trophy,
+} from "lucide-react";
 import type { CatchmentResult } from "./CatchmentMap";
 
-const CAT4_POSTCODES = ["RG1","RG2","RG30","RG31","RG4","RG5","RG6","RG7","RG8","RG9","RG10","RG40","RG41"];
-const CAT5_ONLY_POSTCODES = ["RG12","RG14","RG18","RG19","RG26","RG27","RG42","RG45","GU15","GU17","GU19","GU46","GU47","OX10","SL4","SL5"];
-const CAT5_POSTCODES = [...CAT4_POSTCODES, ...CAT5_ONLY_POSTCODES];
+// --- DATA ---
 
-const PLACES_INFO: Record<string, { places: string; note: string }> = {
-  "Category 1": { places: "Unlimited", note: "Looked After / Previously Looked After Children" },
-  "Category 2": { places: "Unlimited", note: "Children with an EHCP naming the school" },
-  "Category 3": { places: "~60", note: "Within 4.6 mile radius" },
-  "Category 4": { places: "~30", note: "Local postcode area" },
-  "Category 5": { places: "~30", note: "Wider postcode area" },
-};
+const PRIORITY_POSTCODES = [
+  "RG1","RG2","RG30","RG31","RG4","RG5","RG6","RG7","RG8","RG9","RG10","RG40","RG41",
+];
+const CATCHMENT_ONLY_POSTCODES = [
+  "RG12","RG14","RG18","RG19","RG26","RG27","RG42","RG45",
+  "GU15","GU17","GU19","GU46","GU47","OX10","SL4","SL5",
+];
+const CATCHMENT_POSTCODES = [...PRIORITY_POSTCODES, ...CATCHMENT_ONLY_POSTCODES];
+
+const FEEDER_SCHOOLS = [
+  "Alder Grove Church of England Primary School",
+  "Aldryngton Primary School",
+  "Alfred Sutton Primary School",
+  "All Saints Junior School",
+  "Battle Primary Academy",
+  "Bearwood Primary School",
+  "Beechwood Primary School",
+  "Birch Copse Primary School",
+  "Calcot Junior School",
+  "Caversham Park Primary School",
+  "Caversham Primary School",
+  "Christ The King Catholic Primary School",
+  "Churchend Primary Academy",
+  "Civitas Academy",
+  "Coley Primary School",
+  "Downsway Primary School",
+  "E P Collier Primary School",
+  "Earley St Peter's Church of England Primary School",
+  "Emmer Green Primary School",
+  "English Martyrs' Catholic Primary School",
+  "Geoffrey Field Junior School",
+  "Grazeley Parochial Church of England Aided Primary School",
+  "Green Park Village Primary Academy",
+  "Hawkedon Primary School",
+  "Highwood Primary School",
+  "Hillside Primary School",
+  "Katesgrove Primary School",
+  "Kennet Valley Primary School",
+  "Kidmore End Church of England Primary School",
+  "Lambs Lane Primary School",
+  "Loddon Primary School",
+  "Long Lane Primary School",
+  "Manor Primary School",
+  "Meadow Park Academy",
+  "Micklands Primary School",
+  "Moorlands Primary School",
+  "New Christ Church Church of England Primary School",
+  "New Town Primary School",
+  "Oxford Road Community School",
+  "Park Lane Primary School",
+  "Polehampton Church of England Junior School",
+  "Purley CofE Primary School",
+  "Radstock Primary School",
+  "Ranikhet Academy",
+  "Redlands Primary School",
+  "Rivermead Primary School",
+  "Shinfield St Mary's CofE Junior School",
+  "Shiplake Church of England School",
+  "Sonning Church of England Primary School",
+  "South Lake Primary School",
+  "Southcote Primary School",
+  "Springfield Primary School",
+  "St Anne's Catholic Primary School",
+  "St Dominic Savio Catholic Primary School",
+  "St John's Church of England Primary School",
+  "St Martin's Catholic Primary School",
+  "St Mary & All Saints Church of England Primary School",
+  "St Michael's Primary School",
+  "St Nicholas Church of England Primary, Hurst",
+  "St Paul's Catholic Primary School",
+  "Thameside Primary School",
+  "The Colleton Primary School",
+  "The Coombes Church of England Primary School",
+  "The Heights Primary School",
+  "The Hill Primary School",
+  "The Palmer Primary Academy",
+  "The Piggott School",
+  "The Ridgeway Primary School",
+  "Westwood Farm Junior School",
+  "Wheatfield Primary School",
+  "Whiteknights Primary School",
+  "Whitley Park Primary and Nursery School",
+  "Willow Bank Junior School",
+  "Wilson Primary School",
+  "Winnersh Primary School",
+  "Woodley CofE Primary School",
+];
 
 function getPostcodePrefix(postcode: string): string {
   const cleaned = postcode.toUpperCase().replace(/\s+/g, "");
@@ -24,6 +113,8 @@ function getPostcodePrefix(postcode: string): string {
   return cleaned;
 }
 
+// --- TYPES ---
+
 interface FormData {
   dob: string;
   placeType: "day" | "boarding" | "";
@@ -32,100 +123,118 @@ interface FormData {
   isPupilPremium: boolean;
   isServicePremium: boolean;
   hasSocialWelfare: boolean;
-  hasTwin: boolean;
   hasParentStaff: boolean;
+  hasSportingAptitude: boolean;
   primarySchool: string;
   postcode: string;
 }
 
-interface EligibilityResult {
-  categories: { name: string; reason: string; subPriorities: string[] }[];
+interface CategoryResult {
+  name: string;
+  description: string;
+  allocation: string;
+  highlight?: boolean;
 }
 
-const PRIMARY_SCHOOLS = [
-  "Please select...",
-  "Alfred Sutton Primary School",
-  "All Saints CE Infant School",
-  "Battle Primary Academy",
-  "Caversham Park Primary School",
-  "Caversham Primary School",
-  "Christ the King Catholic Primary School",
-  "Churchend Primary Academy",
-  "Coley Primary School",
-  "Emmer Green Primary School",
-  "English Martyrs Catholic Primary School",
-  "Geoffrey Field Junior School",
-  "Highdown School",
-  "Katesgrove Primary School",
-  "Manor Primary School",
-  "Micklands Primary School",
-  "Moorlands Primary School",
-  "New Town Primary School",
-  "Oxford Road Community School",
-  "Park Lane Primary School",
-  "Redlands Primary School",
-  "Ridgeway Primary School",
-  "St Anne's Catholic Primary School",
-  "St Martin's Catholic Primary School",
-  "St Mary & All Saints CE Primary School",
-  "Thameside Primary School",
-  "The Hill Primary School",
-  "The Ridgeway Primary School",
-  "Whitley Park Primary School",
-  "Wilson Primary School",
-  "Other (not listed)",
-];
+// --- LOGIC ---
 
-function calculateEligibility(data: FormData): EligibilityResult {
-  const categories: EligibilityResult["categories"] = [];
+function calculateEligibility(data: FormData): CategoryResult[] {
+  const results: CategoryResult[] = [];
   const prefix = getPostcodePrefix(data.postcode);
+  const isFeeder = FEEDER_SCHOOLS.includes(data.primarySchool);
+  const isPriority = PRIORITY_POSTCODES.includes(prefix);
+  const isCatchment = CATCHMENT_POSTCODES.includes(prefix);
 
-  const subPriorities: string[] = [];
-  if (data.isPupilPremium) subPriorities.push("Pupil Premium eligible");
-  if (data.isServicePremium) subPriorities.push("Service Premium eligible");
-  if (data.hasSocialWelfare) subPriorities.push("Social/Welfare need");
-  if (data.hasParentStaff) subPriorities.push("Parent working at school");
-  if (data.hasTwin) subPriorities.push("Twin applying same year");
-
-  if (data.isLookedAfter) {
-    categories.push({ name: "Category 1", reason: "Looked After / Previously Looked After Child", subPriorities: [] });
-  }
   if (data.hasEHCP) {
-    categories.push({ name: "Category 2", reason: "EHCP naming Reading School", subPriorities: [] });
-  }
-  if (prefix && CAT4_POSTCODES.includes(prefix)) {
-    categories.push({
-      name: "Category 3",
-      reason: "May be eligible — use the map to verify your address is within 4.6 miles.",
-      subPriorities: [...subPriorities],
+    results.push({
+      name: "Category 0",
+      description: "EHCP — place allocated as long as an eligible score is achieved.",
+      allocation: "As needed",
+      highlight: true,
     });
   }
-  if (prefix && CAT4_POSTCODES.includes(prefix)) {
-    categories.push({ name: "Category 4", reason: `${prefix} is in the Category 4 area`, subPriorities: [...subPriorities] });
-  }
-  if (prefix && CAT5_POSTCODES.includes(prefix)) {
-    categories.push({ name: "Category 5", reason: `${prefix} is in the Category 5 area`, subPriorities: [...subPriorities] });
+
+  const cat1Reasons: string[] = [];
+  if (data.isLookedAfter) cat1Reasons.push("(Previously) Looked After / Adopted");
+  if (data.isPupilPremium) cat1Reasons.push("Pupil Premium");
+  if (data.isServicePremium) cat1Reasons.push("Service Premium");
+  if (data.hasSocialWelfare) cat1Reasons.push("Social & Welfare Need");
+  if (data.hasParentStaff) cat1Reasons.push("Child of Staff");
+
+  if (cat1Reasons.length > 0) {
+    results.push({
+      name: "Category 1",
+      description: `${cat1Reasons.join(", ")} — as many places as apply and achieve an eligible score, prioritised in the order listed.`,
+      allocation: "As many as qualify",
+      highlight: true,
+    });
   }
 
-  return { categories };
+  if (data.hasSportingAptitude) {
+    results.push({
+      name: "Category 2",
+      description: "Sporting Aptitude — 15 places reserved across day and boarding.",
+      allocation: "15 places total",
+    });
+  }
+
+  if (isFeeder) {
+    results.push({
+      name: "Category 3",
+      description: `${data.primarySchool} is a named Reading feeder school — 50% of remaining places after Categories 1 & 2.`,
+      allocation: "50% of remaining",
+    });
+  }
+
+  if (isPriority) {
+    results.push({
+      name: "Category 4",
+      description: `${prefix} is a Priority Postcode — 80% of remaining places after Categories 1–3.`,
+      allocation: "80% of remaining",
+    });
+  }
+
+  if (isCatchment) {
+    results.push({
+      name: "Category 5",
+      description: `${prefix} is in the Catchment Area — any remaining places after Categories 1–4.`,
+      allocation: "Remaining places",
+    });
+  }
+
+  // Cat 6 always applies
+  if (!data.hasEHCP && cat1Reasons.length === 0 && !data.hasSportingAptitude && !isFeeder && !isPriority && !isCatchment) {
+    results.push({
+      name: "Category 6",
+      description: "All other eligible candidates — places allocated after all other categories.",
+      allocation: "Any remaining",
+    });
+  }
+
+  return results;
 }
 
-const STEPS = ["About You", "Circumstances", "School & Location"];
+// --- ANIMATION ---
 
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
+const pageVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -60 : 60, opacity: 0 }),
+  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
 };
+
+// --- COMPONENT ---
 
 interface EligibilityFormProps {
   catchmentResult?: CatchmentResult | null;
 }
 
+// Total questions: 0=gate, 1=dob, 2=placeType, 3=EHCP, 4=circumstances, 5=sporting, 6=school, 7=postcode, 8=results
+const TOTAL_QUESTIONS = 8;
+
 const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
-  const [acknowledged, setAcknowledged] = useState(false);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [acknowledged, setAcknowledged] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     dob: "",
     placeType: "",
@@ -134,13 +243,14 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
     isPupilPremium: false,
     isServicePremium: false,
     hasSocialWelfare: false,
-    hasTwin: false,
     hasParentStaff: false,
+    hasSportingAptitude: false,
     primarySchool: "",
     postcode: catchmentResult?.postcode || "",
   });
-  const [result, setResult] = useState<EligibilityResult | null>(null);
-  const formRef = useRef<HTMLDivElement>(null);
+  const [results, setResults] = useState<CategoryResult[]>([]);
+  const [searchSchool, setSearchSchool] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -149,399 +259,526 @@ const EligibilityForm = ({ catchmentResult }: EligibilityFormProps) => {
   const goTo = (s: number) => {
     setDirection(s > step ? 1 : -1);
     setStep(s);
+    containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
+
+  const next = () => goTo(step + 1);
+  const back = () => goTo(step - 1);
 
   const handleSubmit = () => {
-    setResult(calculateEligibility(formData));
-    setDirection(1);
-    setStep(4);
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setResults(calculateEligibility(formData));
+    goTo(TOTAL_QUESTIONS);
   };
 
+  const progress = step === 0 ? 0 : step >= TOTAL_QUESTIONS ? 100 : Math.round((step / (TOTAL_QUESTIONS - 1)) * 100);
+
+  const filteredSchools = searchSchool
+    ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(searchSchool.toLowerCase()))
+    : FEEDER_SCHOOLS;
+
   const inputClass =
-    "w-full px-4 py-3 bg-secondary/50 text-foreground border border-border rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 font-body text-sm transition-all";
-  const labelClass = "block text-sm font-medium font-body mb-1.5 text-foreground";
+    "w-full px-4 py-3.5 bg-secondary/50 text-foreground border border-border rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 font-body text-sm transition-all";
 
-  // Gate
-  if (step === 0) {
-    return (
-      <motion.div
-        ref={formRef}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-card border border-border rounded-xl overflow-hidden"
+  const NavButtons = ({ canContinue = true, isSubmit = false }: { canContinue?: boolean; isSubmit?: boolean }) => (
+    <div className="flex gap-3 mt-8">
+      {step > 1 && (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={back}
+          className="flex items-center gap-2 px-5 py-3 bg-secondary text-foreground rounded-xl font-body text-sm font-medium hover:bg-secondary/80 transition-all"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </motion.button>
+      )}
+      <motion.button
+        whileHover={canContinue ? { scale: 1.02 } : {}}
+        whileTap={canContinue ? { scale: 0.98 } : {}}
+        onClick={isSubmit ? handleSubmit : next}
+        disabled={!canContinue}
+        className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-primary text-primary-foreground rounded-xl font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        <div className="p-6 md:p-8">
-          <div className="flex items-center gap-3 mb-4">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, delay: 0.2 }}
-              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
-            >
-              <AlertCircle className="h-5 w-5 text-primary" />
-            </motion.div>
-            <div>
-              <h3 className="text-lg font-heading font-bold text-foreground">Before You Begin</h3>
-              <p className="text-xs text-muted-foreground font-body">Please read carefully</p>
-            </div>
-          </div>
-          <p className="text-sm font-body text-muted-foreground leading-relaxed mb-6">
-            This tool provides <strong className="text-foreground">indicative information only</strong> and does not guarantee 
-            a place at Reading School. Category eligibility and place availability are subject to change. 
-            You must read the official admissions policy for definitive guidance.
-          </p>
-          <motion.label
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className="flex items-start gap-3 p-4 bg-secondary/50 rounded-lg cursor-pointer group hover:bg-secondary transition-colors mb-6"
-          >
-            <input
-              type="checkbox"
-              checked={acknowledged}
-              onChange={(e) => setAcknowledged(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-primary"
-            />
-            <span className="text-sm font-body text-foreground leading-relaxed">
-              I understand this is indicative only and will read the official admissions policy.
-            </span>
-          </motion.label>
-          <motion.button
-            whileHover={acknowledged ? { scale: 1.02 } : {}}
-            whileTap={acknowledged ? { scale: 0.98 } : {}}
-            disabled={!acknowledged}
-            onClick={() => goTo(1)}
-            className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            Start Eligibility Check
+        {isSubmit ? (
+          <>
+            <Sparkles className="h-4 w-4" />
+            See My Results
+          </>
+        ) : (
+          <>
+            Continue
             <ArrowRight className="h-4 w-4" />
-          </motion.button>
-        </div>
-      </motion.div>
-    );
-  }
+          </>
+        )}
+      </motion.button>
+    </div>
+  );
 
-  // Results
-  if (step === 4 && result) {
-    return (
+  const QuestionHeader = ({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle: string }) => (
+    <div className="flex items-center gap-3 mb-6">
       <motion.div
-        ref={formRef}
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="bg-card border border-border rounded-xl overflow-hidden"
+        initial={{ scale: 0, rotate: -90 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 300, delay: 0.15 }}
+        className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"
       >
-        <div className="p-6 md:p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
-            >
-              <Sparkles className="h-5 w-5 text-primary" />
-            </motion.div>
-            <div>
-              <h3 className="text-lg font-heading font-bold text-foreground">Your Results</h3>
-              <p className="text-xs text-muted-foreground font-body">Based on the information you provided</p>
-            </div>
-          </div>
-
-          {result.categories.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-5 bg-secondary/50 rounded-lg flex items-start gap-3"
-            >
-              <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-              <p className="text-sm font-body text-muted-foreground">
-                This postcode doesn't appear to fall within any catchment category.
-              </p>
-            </motion.div>
-          ) : (
-            <div className="space-y-3">
-              {result.categories.map((cat, i) => (
-                <motion.div
-                  key={cat.name}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 + i * 0.1, duration: 0.35 }}
-                  className="p-4 bg-secondary/50 rounded-lg border border-border"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.3 + i * 0.1, type: "spring" }}
-                      >
-                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                      </motion.div>
-                      <span className="font-semibold font-body text-sm text-foreground">{cat.name}</span>
-                    </div>
-                    {PLACES_INFO[cat.name] && (
-                      <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body font-medium">
-                        {PLACES_INFO[cat.name].places} places
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-body mb-1">{cat.reason}</p>
-                  {cat.subPriorities.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-border">
-                      <p className="text-[11px] font-semibold text-foreground font-body mb-1">Sub-priorities:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {cat.subPriorities.map((sp) => (
-                          <span key={sp} className="text-[10px] font-body px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                            {sp}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-6 flex gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { goTo(1); setResult(null); }}
-              className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all"
-            >
-              Start Over
-            </motion.button>
-          </div>
-
-          <p className="text-[11px] text-muted-foreground font-body italic mt-4">
-            ⚠️ Indicative only. Place numbers are approximate and subject to change.
-          </p>
-        </div>
+        <Icon className="h-5 w-5 text-primary" />
       </motion.div>
-    );
-  }
-
-  // Multi-step form
-  return (
-    <div ref={formRef} className="bg-card border border-border rounded-xl overflow-hidden">
-      {/* Progress */}
-      <div className="px-6 pt-6 md:px-8 md:pt-8">
-        <div className="flex items-center gap-2 mb-6">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2 flex-1">
-              <button
-                onClick={() => { if (i + 1 < step) goTo(i + 1); }}
-                className={`flex items-center gap-2 text-xs font-body font-medium transition-colors ${
-                  i + 1 === step ? "text-primary" : i + 1 < step ? "text-foreground cursor-pointer" : "text-muted-foreground"
-                }`}
-              >
-                <motion.span
-                  animate={{
-                    backgroundColor:
-                      i + 1 === step
-                        ? "hsl(330 100% 80%)"
-                        : i + 1 < step
-                        ? "hsl(330 100% 80% / 0.2)"
-                        : "hsl(220 35% 22%)",
-                    color:
-                      i + 1 === step
-                        ? "hsl(220 40% 13%)"
-                        : i + 1 < step
-                        ? "hsl(330 100% 80%)"
-                        : "hsl(215 20% 65%)",
-                  }}
-                  transition={{ duration: 0.3 }}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold"
-                >
-                  {i + 1 < step ? "✓" : i + 1}
-                </motion.span>
-                <span className="hidden sm:inline">{s}</span>
-              </button>
-              {i < STEPS.length - 1 && (
-                <motion.div
-                  className="flex-1 h-px"
-                  animate={{ backgroundColor: i + 1 < step ? "hsl(330 100% 80% / 0.4)" : "hsl(220 30% 25%)" }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+      <div>
+        <motion.h3
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-lg font-heading font-bold text-foreground"
+        >
+          {title}
+        </motion.h3>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-xs text-muted-foreground font-body"
+        >
+          {subtitle}
+        </motion.p>
       </div>
+    </div>
+  );
 
-      <div className="px-6 pb-6 md:px-8 md:pb-8 overflow-hidden">
+  return (
+    <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-hidden">
+      {/* Progress bar */}
+      {step > 0 && step < TOTAL_QUESTIONS && (
+        <div className="h-1 bg-secondary">
+          <motion.div
+            className="h-full bg-primary rounded-r-full"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
+        </div>
+      )}
+
+      <div className="p-6 md:p-8">
         <AnimatePresence mode="wait" custom={direction}>
-          {/* Step 1 */}
-          {step === 1 && (
+          {/* Gate */}
+          {step === 0 && (
             <motion.div
-              key="step1"
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="space-y-5"
+              key="gate"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              <div>
-                <label className={labelClass}>Date of Birth</label>
-                <input type="date" value={formData.dob} onChange={(e) => handleChange("dob", e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Interested in</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["day", "boarding"] as const).map((type) => (
-                    <motion.button
-                      key={type}
-                      type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleChange("placeType", type)}
-                      className={`p-4 rounded-lg border text-sm font-body font-medium text-center transition-colors ${
-                        formData.placeType === type
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border bg-secondary/50 text-muted-foreground hover:border-primary/30"
-                      }`}
-                    >
-                      {type === "day" ? "🏠 Day Place" : "🛏️ Boarding Place"}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-              <motion.button
-                whileHover={formData.dob && formData.placeType ? { scale: 1.02 } : {}}
-                whileTap={formData.dob && formData.placeType ? { scale: 0.98 } : {}}
-                onClick={() => goTo(2)}
-                disabled={!formData.dob || !formData.placeType}
-                className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              <QuestionHeader icon={AlertCircle} title="Before You Begin" subtitle="Important information" />
+              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-6">
+                This tool provides <strong className="text-foreground">indicative information only</strong> and does not guarantee
+                a place at Reading School. Category eligibility and place availability are subject to change.
+                You must read the official admissions policy for definitive guidance.
+              </p>
+              <motion.label
+                whileHover={{ scale: 1.005 }}
+                className="flex items-start gap-3 p-4 bg-secondary/50 rounded-xl cursor-pointer hover:bg-secondary transition-colors mb-6 border border-border/50"
               >
-                Continue <ChevronRight className="h-4 w-4" />
+                <input
+                  type="checkbox"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span className="text-sm font-body text-foreground leading-relaxed">
+                  I understand this is indicative only and will read the official admissions policy.
+                </span>
+              </motion.label>
+              <motion.button
+                whileHover={acknowledged ? { scale: 1.02 } : {}}
+                whileTap={acknowledged ? { scale: 0.98 } : {}}
+                disabled={!acknowledged}
+                onClick={() => goTo(1)}
+                className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Start Eligibility Check
+                <ArrowRight className="h-4 w-4" />
               </motion.button>
             </motion.div>
           )}
 
-          {/* Step 2 */}
-          {step === 2 && (
+          {/* Q1: DOB */}
+          {step === 1 && (
             <motion.div
-              key="step2"
+              key="q1"
               custom={direction}
-              variants={slideVariants}
+              variants={pageVariants}
               initial="enter"
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="space-y-4"
             >
-              <p className="text-sm text-muted-foreground font-body">Select all that apply:</p>
+              <QuestionHeader icon={Calendar} title="Date of Birth" subtitle="Question 1 of 7" />
+              <input
+                type="date"
+                value={formData.dob}
+                onChange={(e) => handleChange("dob", e.target.value)}
+                className={inputClass}
+              />
+              <NavButtons canContinue={!!formData.dob} />
+            </motion.div>
+          )}
+
+          {/* Q2: Day or Boarding */}
+          {step === 2 && (
+            <motion.div
+              key="q2"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <QuestionHeader icon={Home} title="Day or Boarding?" subtitle="Question 2 of 7" />
+              <div className="grid grid-cols-2 gap-3">
+                {(["day", "boarding"] as const).map((type, i) => (
+                  <motion.button
+                    key={type}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.08 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="button"
+                    onClick={() => handleChange("placeType", type)}
+                    className={`p-6 rounded-xl border-2 text-center transition-colors ${
+                      formData.placeType === type
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/30 hover:border-primary/30"
+                    }`}
+                  >
+                    <span className="text-3xl block mb-2">{type === "day" ? "🏠" : "🛏️"}</span>
+                    <span className={`text-sm font-body font-semibold ${formData.placeType === type ? "text-primary" : "text-muted-foreground"}`}>
+                      {type === "day" ? "Day Place" : "Boarding Place"}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+              <NavButtons canContinue={!!formData.placeType} />
+            </motion.div>
+          )}
+
+          {/* Q3: EHCP */}
+          {step === 3 && (
+            <motion.div
+              key="q3"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <QuestionHeader icon={AlertCircle} title="Education, Health & Care Plan" subtitle="Question 3 of 7" />
+              <p className="text-sm text-muted-foreground font-body mb-4">
+                Does your child have an EHCP that names Reading School?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[true, false].map((val, i) => (
+                  <motion.button
+                    key={String(val)}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.08 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="button"
+                    onClick={() => handleChange("hasEHCP", val)}
+                    className={`p-5 rounded-xl border-2 text-center transition-colors ${
+                      formData.hasEHCP === val
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/30"
+                    } font-body font-semibold text-sm`}
+                  >
+                    {val ? "Yes" : "No"}
+                  </motion.button>
+                ))}
+              </div>
+              <NavButtons />
+            </motion.div>
+          )}
+
+          {/* Q4: Circumstances */}
+          {step === 4 && (
+            <motion.div
+              key="q4"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <QuestionHeader icon={CheckCircle} title="Priority Criteria" subtitle="Question 4 of 7 — select all that apply" />
               <div className="space-y-2">
                 {[
-                  { key: "hasEHCP" as const, label: "Has an EHCP", emoji: "📋" },
-                  { key: "isLookedAfter" as const, label: "Looked After / Previously Looked After", emoji: "🏡" },
+                  { key: "isLookedAfter" as const, label: "Looked After / Previously Looked After / Adopted", emoji: "🏡" },
                   { key: "isPupilPremium" as const, label: "Eligible for Pupil Premium", emoji: "💰" },
                   { key: "isServicePremium" as const, label: "Eligible for Service Premium", emoji: "🎖️" },
                   { key: "hasSocialWelfare" as const, label: "Social or Welfare need", emoji: "❤️" },
-                  { key: "hasTwin" as const, label: "Twin applying same year", emoji: "👥" },
-                  { key: "hasParentStaff" as const, label: "Parent works at the school", emoji: "🏫" },
+                  { key: "hasParentStaff" as const, label: "Parent/carer works at the school", emoji: "🏫" },
                 ].map(({ key, label, emoji }, i) => (
                   <motion.button
                     key={key}
                     type="button"
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: 0.08 * i }}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => handleChange(key, !formData[key])}
-                    className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-sm font-body text-left transition-colors ${
+                    className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-sm font-body text-left transition-colors ${
                       formData[key]
                         ? "border-primary bg-primary/10 text-foreground"
                         : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/30"
                     }`}
                   >
-                    <span className="text-base">{emoji}</span>
+                    <span className="text-lg">{emoji}</span>
                     <span className="flex-1">{label}</span>
                     <AnimatePresence>
                       {formData[key] && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          transition={{ type: "spring", stiffness: 400 }}
-                        >
-                          <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: "spring", stiffness: 400 }}>
+                          <CheckCircle className="h-5 w-5 text-primary" />
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.button>
                 ))}
               </div>
-              <div className="flex gap-3 pt-2">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(1)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
-                  Back
-                </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(3)} className="flex-1 py-3 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
-                  Continue <ChevronRight className="h-4 w-4" />
-                </motion.button>
-              </div>
+              <p className="text-[11px] text-muted-foreground font-body mt-3 italic">
+                These are listed in priority order as per the admissions policy. Skip if none apply.
+              </p>
+              <NavButtons />
             </motion.div>
           )}
 
-          {/* Step 3 */}
-          {step === 3 && (
+          {/* Q5: Sporting Aptitude */}
+          {step === 5 && (
             <motion.div
-              key="step3"
+              key="q5"
               custom={direction}
-              variants={slideVariants}
+              variants={pageVariants}
               initial="enter"
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="space-y-5"
             >
-              <div>
-                <label className={labelClass}>Primary School</label>
-                <select value={formData.primarySchool} onChange={(e) => handleChange("primarySchool", e.target.value)} className={inputClass}>
-                  {PRIMARY_SCHOOLS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Postcode</label>
-                <input
-                  type="text"
-                  value={formData.postcode}
-                  onChange={(e) => handleChange("postcode", e.target.value)}
-                  placeholder="e.g. RG1 5AG"
-                  className={inputClass}
-                />
-                {catchmentResult && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[11px] text-primary font-body mt-1.5"
+              <QuestionHeader icon={Trophy} title="Sporting Aptitude" subtitle="Question 5 of 7" />
+              <p className="text-sm text-muted-foreground font-body mb-4">
+                Will your child be applying under the Sporting Aptitude criteria? (15 places reserved across day & boarding)
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[true, false].map((val, i) => (
+                  <motion.button
+                    key={String(val)}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + i * 0.08 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="button"
+                    onClick={() => handleChange("hasSportingAptitude", val)}
+                    className={`p-5 rounded-xl border-2 text-center transition-colors ${
+                      formData.hasSportingAptitude === val
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/30"
+                    } font-body font-semibold text-sm`}
                   >
-                    ✓ Pre-filled from your map search
-                  </motion.p>
-                )}
+                    {val ? "Yes" : "No"}
+                  </motion.button>
+                ))}
               </div>
-              <div className="flex gap-3 pt-2">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => goTo(2)} className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-body text-sm font-medium hover:bg-secondary/80 transition-all">
-                  Back
-                </motion.button>
+              <NavButtons />
+            </motion.div>
+          )}
+
+          {/* Q6: Primary School */}
+          {step === 6 && (
+            <motion.div
+              key="q6"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <QuestionHeader icon={School} title="Primary School" subtitle="Question 6 of 7" />
+              <input
+                type="text"
+                value={searchSchool}
+                onChange={(e) => setSearchSchool(e.target.value)}
+                placeholder="Search for your school…"
+                className={`${inputClass} mb-3`}
+              />
+              <div className="max-h-[240px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                {filteredSchools.map((school, i) => (
+                  <motion.button
+                    key={school}
+                    type="button"
+                    initial={i < 10 ? { opacity: 0, x: -10 } : {}}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: Math.min(i, 10) * 0.03 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => { handleChange("primarySchool", school); setSearchSchool(""); }}
+                    className={`w-full text-left p-3 rounded-lg text-sm font-body transition-colors ${
+                      formData.primarySchool === school
+                        ? "bg-primary/10 text-primary border border-primary/30 font-semibold"
+                        : "bg-secondary/30 text-muted-foreground hover:bg-secondary border border-transparent"
+                    }`}
+                  >
+                    {school}
+                  </motion.button>
+                ))}
                 <motion.button
-                  whileHover={formData.postcode ? { scale: 1.02 } : {}}
-                  whileTap={formData.postcode ? { scale: 0.98 } : {}}
-                  onClick={handleSubmit}
-                  disabled={!formData.postcode}
-                  className="flex-1 py-3.5 bg-primary text-primary-foreground rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  type="button"
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => handleChange("primarySchool", "Other (not listed)")}
+                  className={`w-full text-left p-3 rounded-lg text-sm font-body transition-colors ${
+                    formData.primarySchool === "Other (not listed)"
+                      ? "bg-primary/10 text-primary border border-primary/30 font-semibold"
+                      : "bg-secondary/30 text-muted-foreground hover:bg-secondary border border-transparent"
+                  }`}
                 >
-                  <Sparkles className="h-4 w-4" />
-                  Check Eligibility
+                  Other (not listed)
                 </motion.button>
               </div>
+              {formData.primarySchool && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 text-xs font-body text-primary flex items-center gap-1.5"
+                >
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Selected: {formData.primarySchool}
+                  {FEEDER_SCHOOLS.includes(formData.primarySchool) && (
+                    <span className="ml-1 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] font-semibold">
+                      Feeder School ✓
+                    </span>
+                  )}
+                </motion.div>
+              )}
+              <NavButtons canContinue={!!formData.primarySchool} />
+            </motion.div>
+          )}
+
+          {/* Q7: Postcode */}
+          {step === 7 && (
+            <motion.div
+              key="q7"
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <QuestionHeader icon={MapPinIcon} title="Your Postcode" subtitle="Question 7 of 7" />
+              <input
+                type="text"
+                value={formData.postcode}
+                onChange={(e) => handleChange("postcode", e.target.value.toUpperCase())}
+                placeholder="e.g. RG1 5AG"
+                className={inputClass}
+                autoFocus
+              />
+              {catchmentResult && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[11px] text-primary font-body mt-2 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" /> Pre-filled from your map search
+                </motion.p>
+              )}
+              <NavButtons canContinue={!!formData.postcode.trim()} isSubmit />
+            </motion.div>
+          )}
+
+          {/* Results */}
+          {step === TOTAL_QUESTIONS && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                  className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"
+                >
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-heading font-bold text-foreground">Your Results</h3>
+                  <p className="text-xs text-muted-foreground font-body">Based on the information you provided</p>
+                </div>
+              </div>
+
+              {results.length === 0 ? (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 bg-secondary/50 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-body font-semibold text-foreground mb-1">Category 6</p>
+                    <p className="text-sm font-body text-muted-foreground">
+                      Based on the information provided, your child would fall under Category 6 — all other eligible candidates.
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="space-y-3">
+                  {results.map((cat, i) => (
+                    <motion.div
+                      key={cat.name}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.12 + i * 0.1, duration: 0.35 }}
+                      className={`p-4 rounded-xl border ${cat.highlight ? "border-primary/30 bg-primary/5" : "border-border bg-secondary/50"}`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.25 + i * 0.1, type: "spring" }}
+                          >
+                            <CheckCircle className={`h-4 w-4 shrink-0 ${cat.highlight ? "text-primary" : "text-cat4"}`} />
+                          </motion.div>
+                          <span className="font-semibold font-body text-sm text-foreground">{cat.name}</span>
+                        </div>
+                        <span className="text-[11px] bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-body font-medium">
+                          {cat.allocation}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-body leading-relaxed">{cat.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setResults([]);
+                    goTo(0);
+                    setAcknowledged(false);
+                  }}
+                  className="flex-1 py-3 bg-secondary text-foreground rounded-xl font-body text-sm font-medium hover:bg-secondary/80 transition-all"
+                >
+                  Start Over
+                </motion.button>
+              </div>
+
+              <p className="text-[11px] text-muted-foreground font-body italic mt-4">
+                ⚠️ Indicative only. Please refer to the official Reading School admissions policy for definitive information.
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
