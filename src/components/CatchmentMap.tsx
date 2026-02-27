@@ -4,8 +4,8 @@ import "leaflet/dist/leaflet.css";
 import { Search, MapPin, Loader2, X, ChevronRight } from "lucide-react";
 import { CAT4_AREAS, CAT5_ONLY_AREAS, CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
 
-const SCHOOL_LAT = 51.4543;
-const SCHOOL_LNG = -0.9465;
+const SCHOOL_LAT = 51.4493;
+const SCHOOL_LNG = -0.9536;
 const CAT3_MILES = 4.6;
 const CAT3_METERS = CAT3_MILES * 1609.34;
 const ALL_CAT5_POSTCODES = [...CAT4_POSTCODES_LIST, ...CAT5_ONLY_POSTCODES_LIST];
