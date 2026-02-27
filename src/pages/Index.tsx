@@ -1,46 +1,64 @@
+import { useState } from "react";
 import CatchmentMap from "@/components/CatchmentMap";
 import EligibilityForm from "@/components/EligibilityForm";
+import type { CatchmentResult } from "@/components/CatchmentMap";
 
 const Index = () => {
+  const [catchmentResult, setCatchmentResult] = useState<CatchmentResult | null>(null);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Hero Header */}
       <header className="border-b border-border bg-card">
-        <div className="container max-w-6xl mx-auto px-4 py-5 flex items-center gap-4">
+        <div className="container max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-heading font-bold tracking-tight">Reading School</h1>
-            <p className="text-sm text-muted-foreground font-body">Admissions Catchment & Eligibility Tool</p>
+            <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tight text-foreground">
+              Reading School
+            </h1>
+            <p className="text-sm text-muted-foreground font-body mt-0.5">
+              Admissions Catchment & Eligibility Tool
+            </p>
           </div>
-          <span className="ml-auto text-xs text-muted-foreground font-body uppercase tracking-wider">Est. 1125</span>
+          <span className="text-[11px] text-muted-foreground font-body uppercase tracking-[0.15em] hidden sm:block">
+            Est. 1125
+          </span>
         </div>
       </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-8 space-y-12">
+      <main className="container max-w-6xl mx-auto px-4 py-8 space-y-10">
         {/* Map Section */}
         <section>
-          <p className="section-heading">Catchment Area Map</p>
-          <h2 className="text-3xl font-heading font-bold mb-2">Catchment Areas</h2>
-          <p className="text-sm text-muted-foreground font-body mb-6 max-w-2xl">
-            Search for your address to see which admission categories you may be eligible for.
-            The blue circle shows the 4.6 mile radius from Reading School's Erleigh Road gate (Category 3).
-          </p>
-          <CatchmentMap />
+          <div className="mb-5">
+            <p className="section-heading">Step 1</p>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-1">
+              Explore Catchment Areas
+            </h2>
+            <p className="text-sm text-muted-foreground font-body max-w-xl">
+              Search your address to see which categories you may fall under. Toggle layers on the map to explore boundaries.
+            </p>
+          </div>
+          <CatchmentMap onResult={setCatchmentResult} />
         </section>
 
-        {/* Form Section */}
+        {/* Eligibility Section */}
         <section>
-          <p className="section-heading">Admissions Eligibility</p>
-          <h2 className="text-3xl font-heading font-bold mb-2">Check Your Eligibility</h2>
-          <p className="text-sm text-muted-foreground font-body mb-6 max-w-2xl">
-            Complete the form below to see which admission category or categories your child may be eligible for,
-            along with indicative place availability.
-          </p>
-          <EligibilityForm />
+          <div className="mb-5">
+            <p className="section-heading">Step 2</p>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-1">
+              Check Your Eligibility
+            </h2>
+            <p className="text-sm text-muted-foreground font-body max-w-xl">
+              Answer a few questions to find out which admission categories apply to your child.
+            </p>
+          </div>
+          <EligibilityForm catchmentResult={catchmentResult} />
         </section>
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground font-body">
-        This tool provides indicative information only. Please refer to the official Reading School admissions policy.
+      <footer className="border-t border-border py-6 text-center">
+        <p className="text-[11px] text-muted-foreground font-body">
+          This tool provides indicative information only. Please refer to the official Reading School admissions policy.
+        </p>
       </footer>
     </div>
   );
