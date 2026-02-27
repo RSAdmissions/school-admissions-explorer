@@ -6,8 +6,13 @@ import { CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAr
 
 const SCHOOL_LAT = 51.4543;
 const SCHOOL_LNG = -0.9465;
-const RADIUS_MILES = 4.6;
-const RADIUS_METERS = RADIUS_MILES * 1609.34;
+const CAT3_MILES = 4.6;
+const CAT3_METERS = CAT3_MILES * 1609.34;
+// Approximate enclosing radii for postcode groups
+const CAT4_MILES = 14;
+const CAT4_METERS = CAT4_MILES * 1609.34;
+const CAT5_MILES = 25;
+const CAT5_METERS = CAT5_MILES * 1609.34;
 
 const ALL_CAT5_POSTCODES = [...CAT4_POSTCODES_LIST, ...CAT5_ONLY_POSTCODES_LIST];
 
@@ -55,9 +60,33 @@ const CatchmentMap = () => {
       .addTo(map)
       .bindPopup("<strong>Reading School</strong><br/>Erleigh Road Gate");
 
-    // Category 3 circle — the only overlay
+    // Category 5 circle (outermost)
     L.circle([SCHOOL_LAT, SCHOOL_LNG], {
-      radius: RADIUS_METERS,
+      radius: CAT5_METERS,
+      color: "hsl(35, 90%, 55%)",
+      fillColor: "hsl(35, 90%, 55%)",
+      fillOpacity: 0.04,
+      weight: 1.5,
+      dashArray: "4 6",
+    })
+      .addTo(map)
+      .bindTooltip("Category 5: ~25 mile radius", { sticky: true });
+
+    // Category 4 circle (middle)
+    L.circle([SCHOOL_LAT, SCHOOL_LNG], {
+      radius: CAT4_METERS,
+      color: "hsl(140, 60%, 45%)",
+      fillColor: "hsl(140, 60%, 45%)",
+      fillOpacity: 0.05,
+      weight: 1.5,
+      dashArray: "6 4",
+    })
+      .addTo(map)
+      .bindTooltip("Category 4: ~14 mile radius", { sticky: true });
+
+    // Category 3 circle (innermost)
+    L.circle([SCHOOL_LAT, SCHOOL_LNG], {
+      radius: CAT3_METERS,
       color: "hsl(200, 70%, 50%)",
       fillColor: "hsl(200, 70%, 50%)",
       fillOpacity: 0.08,
@@ -109,7 +138,7 @@ const CatchmentMap = () => {
       }
 
       const categories: string[] = [];
-      if (distMeters <= RADIUS_METERS) categories.push("Category 3");
+      if (distMeters <= CAT3_METERS) categories.push("Category 3");
       if (CAT4_POSTCODES_LIST.includes(prefix)) categories.push("Category 4");
       if (ALL_CAT5_POSTCODES.includes(prefix)) categories.push("Category 5");
 
