@@ -180,7 +180,14 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
 
   const handleSearch = async (queryOverride?: string) => {
     const q = (queryOverride ?? searchQuery).trim();
-    if (!q) return;
+    if (!q) {
+      setSearchError("Please enter a postcode.");
+      return;
+    }
+    if (!selectedSchool) {
+      setSearchError("Please select a primary school.");
+      return;
+    }
     setIsSearching(true);
     setSearchError(null);
     setSearchResult(null);
@@ -218,8 +225,10 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
         mapInstance.current.flyTo([latNum, lngNum], 12, { duration: 1.2 });
       }
 
+      // Category 3 is ONLY based on feeder school, not distance
       const categories: string[] = [];
-      if (distMeters <= CAT3_METERS) categories.push("Category 3");
+      const isFeeder = FEEDER_SCHOOLS.includes(selectedSchool);
+      if (isFeeder) categories.push("Category 3");
       if (CAT4_POSTCODES_LIST.includes(prefix)) categories.push("Category 4");
       if (ALL_CAT5_POSTCODES.includes(prefix)) categories.push("Category 5");
 
@@ -277,7 +286,7 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onKeyDown={(e) => e.key === "Enter" && selectedSchool && handleSearch()}
                 placeholder="Enter your postcode or address…"
                 className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
@@ -289,7 +298,7 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 )}
                 <button
                   onClick={() => handleSearch()}
-                  disabled={isSearching}
+                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
                 >
                   {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
@@ -394,35 +403,14 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                             }}
                           >
                             <ChevronRight className="h-3 w-3" />
-                            {cat}
+                            {cat}{cat === "Category 3" ? " (Feeder)" : ""}
                           </span>
                         ))}
-                        {selectedSchool && FEEDER_SCHOOLS.includes(selectedSchool) && (
-                          <span
-                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
-                            style={{ backgroundColor: CAT3_COLOR + "22", color: CAT3_COLOR }}
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                            Category 3 (Feeder)
-                          </span>
-                        )}
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedSchool && FEEDER_SCHOOLS.includes(selectedSchool) ? (
-                          <span
-                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
-                            style={{ backgroundColor: CAT3_COLOR + "22", color: CAT3_COLOR }}
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                            Category 3 (Feeder)
-                          </span>
-                        ) : (
-                          <p className="text-xs text-muted-foreground font-body">
-                            Not within any catchment category.
-                          </p>
-                        )}
-                      </div>
+                      <p className="text-xs text-muted-foreground font-body">
+                        Not within any catchment category.
+                      </p>
                     )}
                   </div>
                 )}
