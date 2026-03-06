@@ -41,6 +41,7 @@ export interface CatchmentResult {
   categories: string[];
   lat: number;
   lng: number;
+  inCatchment: boolean;
 }
 
 interface CatchmentMapProps {
@@ -225,14 +226,22 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
         mapInstance.current.flyTo([latNum, lngNum], 12, { duration: 1.2 });
       }
 
-      // Category 3 is ONLY based on feeder school, not distance
-      const categories: string[] = [];
-      const isFeeder = FEEDER_SCHOOLS.includes(selectedSchool);
-      if (isFeeder) categories.push("Category 3");
-      if (CAT4_POSTCODES_LIST.includes(prefix)) categories.push("Category 4");
-      if (ALL_CAT5_POSTCODES.includes(prefix)) categories.push("Category 5");
+      // Check if postcode is in ANY catchment area
+      const isInCat3Radius = distMeters <= CAT3_METERS;
+      const isPriority = CAT4_POSTCODES_LIST.includes(prefix);
+      const isCatchment = ALL_CAT5_POSTCODES.includes(prefix);
+      const inCatchment = isInCat3Radius || isPriority || isCatchment;
 
-      const result: CatchmentResult = { postcode, prefix, distMiles, categories, lat: latNum, lng: lngNum };
+      // If not in catchment at all, not eligible for any day student category
+      const categories: string[] = [];
+      if (inCatchment) {
+        const isFeeder = FEEDER_SCHOOLS.includes(selectedSchool);
+        if (isFeeder) categories.push("Category 3");
+        if (isPriority) categories.push("Category 4");
+        if (isCatchment) categories.push("Category 5");
+      }
+
+      const result: CatchmentResult = { postcode, prefix, distMiles, categories, lat: latNum, lng: lngNum, inCatchment };
       setSearchResult(result);
       onResult?.(result);
     } catch {
