@@ -56,6 +56,10 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<CatchmentResult | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const [schoolSearch, setSchoolSearch] = useState("");
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const schoolDropdownRef = useRef<HTMLDivElement>(null);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set(["cat3", "cat4", "cat5"]));
   const layersRef = useRef<{ cat3: L.Layer[]; cat4: L.Layer[]; cat5: L.Layer[] }>({
     cat3: [],
