@@ -79,6 +79,17 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
     []
   );
 
+  // Close school dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (schoolDropdownRef.current && !schoolDropdownRef.current.contains(e.target as Node)) {
+        setShowSchoolDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   // Init map
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
