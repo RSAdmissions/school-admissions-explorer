@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Search, MapPin, Loader2, X, ChevronRight } from "lucide-react";
+import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle } from "lucide-react";
 import { CAT4_AREAS, CAT5_ONLY_AREAS, CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
+import { FEEDER_SCHOOLS } from "@/data/feederSchools";
 
 const SCHOOL_LAT = 51.4493;
 const SCHOOL_LNG = -0.9536;
