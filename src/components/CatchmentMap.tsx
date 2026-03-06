@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle } from "lucide-react";
+import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle, Info } from "lucide-react";
 import { CAT4_AREAS, CAT5_ONLY_AREAS, CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
 import { FEEDER_SCHOOLS } from "@/data/feederSchools";
 
@@ -41,12 +41,46 @@ export interface CatchmentResult {
   categories: string[];
   lat: number;
   lng: number;
+  inCatchment: boolean;
 }
 
 interface CatchmentMapProps {
   onResult?: (result: CatchmentResult | null) => void;
   externalPostcode?: string;
 }
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  "Category 3": "Named feeder primary school — 50% of remaining places after Categories 1 & 2.",
+  "Category 4": "Priority postcode area — 80% of remaining places after Category 3.",
+  "Category 5": "Wider catchment area — remaining places after Category 4.",
+};
+
+const CategoryBadge = ({ category }: { category: string }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const color = category === "Category 3" ? CAT3_COLOR : category === "Category 4" ? CAT4_COLOR : CAT5_COLOR;
+  const label = category === "Category 3" ? "Category 3 (Feeder)" : category;
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={() => setShowTooltip(!showTooltip)}
+        className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1 cursor-help"
+        style={{ backgroundColor: color + "22", color }}
+      >
+        <ChevronRight className="h-3 w-3" />
+        {label}
+        <Info className="h-3 w-3 ml-0.5 opacity-60" />
+      </button>
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-card border border-border rounded-lg shadow-xl text-[11px] font-body text-foreground leading-relaxed z-50">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-card border-r border-b border-border" />
+          {CATEGORY_DESCRIPTIONS[category] || category}
+        </div>
+      )}
+    </span>
+  );
+};
 
 const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -225,14 +259,22 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
         mapInstance.current.flyTo([latNum, lngNum], 12, { duration: 1.2 });
       }
 
-      // Category 3 is ONLY based on feeder school, not distance
-      const categories: string[] = [];
-      const isFeeder = FEEDER_SCHOOLS.includes(selectedSchool);
-      if (isFeeder) categories.push("Category 3");
-      if (CAT4_POSTCODES_LIST.includes(prefix)) categories.push("Category 4");
-      if (ALL_CAT5_POSTCODES.includes(prefix)) categories.push("Category 5");
+      // Check if postcode is in ANY catchment area
+      const isInCat3Radius = distMeters <= CAT3_METERS;
+      const isPriority = CAT4_POSTCODES_LIST.includes(prefix);
+      const isCatchment = ALL_CAT5_POSTCODES.includes(prefix);
+      const inCatchment = isInCat3Radius || isPriority || isCatchment;
 
-      const result: CatchmentResult = { postcode, prefix, distMiles, categories, lat: latNum, lng: lngNum };
+      // If not in catchment at all, not eligible for any day student category
+      const categories: string[] = [];
+      if (inCatchment) {
+        const isFeeder = FEEDER_SCHOOLS.includes(selectedSchool);
+        if (isFeeder) categories.push("Category 3");
+        if (isPriority) categories.push("Category 4");
+        if (isCatchment) categories.push("Category 5");
+      }
+
+      const result: CatchmentResult = { postcode, prefix, distMiles, categories, lat: latNum, lng: lngNum, inCatchment };
       setSearchResult(result);
       onResult?.(result);
     } catch {
@@ -390,26 +432,30 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                         {searchResult.distMiles.toFixed(1)} miles from school
                       </span>
                     </div>
-                    {searchResult.categories.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {searchResult.categories.map((cat) => (
-                          <span
-                            key={cat}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
-                            style={{
-                              backgroundColor:
-                                cat === "Category 3" ? CAT3_COLOR + "22" : cat === "Category 4" ? CAT4_COLOR + "22" : CAT5_COLOR + "22",
-                              color: cat === "Category 3" ? CAT3_COLOR : cat === "Category 4" ? CAT4_COLOR : CAT5_COLOR,
-                            }}
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                            {cat}{cat === "Category 3" ? " (Feeder)" : ""}
-                          </span>
-                        ))}
+
+                    {!searchResult.inCatchment ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-body font-semibold text-destructive">
+                          This postcode is outside the catchment area — not eligible for day student Categories 1–5.
+                        </p>
+                        <p className="text-[11px] font-body text-muted-foreground">
+                          Boarding places are assessed separately and do not depend on home postcode or primary school.
+                        </p>
+                      </div>
+                    ) : searchResult.categories.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {searchResult.categories.map((cat) => (
+                            <CategoryBadge key={cat} category={cat} />
+                          ))}
+                        </div>
+                        <p className="text-[11px] font-body text-muted-foreground italic">
+                          Boarding places are assessed separately — postcode and school are not relevant.
+                        </p>
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground font-body">
-                        Not within any catchment category.
+                        Not within any specific priority category. You may still be eligible under Category 6 (Others).
                       </p>
                     )}
                   </div>
