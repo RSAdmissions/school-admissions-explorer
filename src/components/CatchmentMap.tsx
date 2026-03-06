@@ -155,6 +155,14 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
         </div>`
       );
 
+    // Always clear existing catchment layers first (prevents stale rectangles after hot reloads)
+    (["cat3", "cat4", "cat5"] as const).forEach((cat) => {
+      layersRef.current[cat].forEach((layer) => {
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+      });
+      layersRef.current[cat] = [];
+    });
+
     // Cat 3 circle
     const circle = L.circle([SCHOOL_LAT, SCHOOL_LNG], {
       radius: CAT3_METERS,
