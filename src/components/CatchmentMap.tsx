@@ -269,7 +269,8 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
 
         {/* Search overlay */}
         <div className="absolute top-4 left-4 right-4 z-[1000]">
-          <div className="max-w-lg mx-auto">
+          <div className="max-w-lg mx-auto space-y-2">
+            {/* Postcode input */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -278,7 +279,7 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Enter your postcode or address…"
-                className="w-full pl-11 pr-24 py-3.5 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
+                className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 {searchQuery && (
@@ -296,9 +297,77 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
               </div>
             </div>
 
+            {/* Primary school selector */}
+            <div className="relative" ref={schoolDropdownRef}>
+              <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={selectedSchool ? selectedSchool : schoolSearch}
+                onChange={(e) => {
+                  setSchoolSearch(e.target.value);
+                  setSelectedSchool("");
+                  setShowSchoolDropdown(true);
+                }}
+                onFocus={() => setShowSchoolDropdown(true)}
+                placeholder="Select primary school…"
+                className="w-full pl-11 pr-10 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
+              />
+              {selectedSchool && (
+                <button
+                  onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {showSchoolDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                  {(schoolSearch
+                    ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(schoolSearch.toLowerCase()))
+                    : FEEDER_SCHOOLS
+                  ).map((school) => (
+                    <button
+                      key={school}
+                      onClick={() => {
+                        setSelectedSchool(school);
+                        setSchoolSearch("");
+                        setShowSchoolDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-body text-foreground hover:bg-primary/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                    >
+                      {school}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setSelectedSchool("Other (not listed)");
+                      setSchoolSearch("");
+                      setShowSchoolDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm font-body text-muted-foreground italic hover:bg-primary/10 transition-colors last:rounded-b-xl"
+                  >
+                    Other (not listed)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Selected school badge */}
+            {selectedSchool && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="text-xs font-body text-foreground truncate">{selectedSchool}</span>
+                {FEEDER_SCHOOLS.includes(selectedSchool) && (
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-body font-semibold whitespace-nowrap">
+                    Feeder School ✓
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Search result card */}
             {(searchResult || searchError) && (
-              <div className="mt-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl p-4 shadow-lg animate-fade-in">
+              <div className="bg-card/95 backdrop-blur-md border border-border/50 rounded-xl p-4 shadow-lg animate-fade-in">
                 {searchError ? (
                   <p className="text-sm font-body text-destructive">{searchError}</p>
                 ) : searchResult && (
@@ -328,11 +397,32 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                             {cat}
                           </span>
                         ))}
+                        {selectedSchool && FEEDER_SCHOOLS.includes(selectedSchool) && (
+                          <span
+                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
+                            style={{ backgroundColor: CAT3_COLOR + "22", color: CAT3_COLOR }}
+                          >
+                            <ChevronRight className="h-3 w-3" />
+                            Category 3 (Feeder)
+                          </span>
+                        )}
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground font-body">
-                        Not within any catchment category.
-                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedSchool && FEEDER_SCHOOLS.includes(selectedSchool) ? (
+                          <span
+                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
+                            style={{ backgroundColor: CAT3_COLOR + "22", color: CAT3_COLOR }}
+                          >
+                            <ChevronRight className="h-3 w-3" />
+                            Category 3 (Feeder)
+                          </span>
+                        ) : (
+                          <p className="text-xs text-muted-foreground font-body">
+                            Not within any catchment category.
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
