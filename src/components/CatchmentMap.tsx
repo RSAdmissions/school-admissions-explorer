@@ -48,6 +48,39 @@ interface CatchmentMapProps {
   onResult?: (result: CatchmentResult | null) => void;
   externalPostcode?: string;
 }
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  "Category 3": "Named feeder primary school — 50% of remaining places after Categories 1 & 2.",
+  "Category 4": "Priority postcode area — 80% of remaining places after Category 3.",
+  "Category 5": "Wider catchment area — remaining places after Category 4.",
+};
+
+const CategoryBadge = ({ category }: { category: string }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const color = category === "Category 3" ? CAT3_COLOR : category === "Category 4" ? CAT4_COLOR : CAT5_COLOR;
+  const label = category === "Category 3" ? "Category 3 (Feeder)" : category;
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={() => setShowTooltip(!showTooltip)}
+        className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1 cursor-help"
+        style={{ backgroundColor: color + "22", color }}
+      >
+        <ChevronRight className="h-3 w-3" />
+        {label}
+        <Info className="h-3 w-3 ml-0.5 opacity-60" />
+      </button>
+      {showTooltip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-card border border-border rounded-lg shadow-xl text-[11px] font-body text-foreground leading-relaxed z-50">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-card border-r border-b border-border" />
+          {CATEGORY_DESCRIPTIONS[category] || category}
+        </div>
+      )}
+    </span>
+  );
+};
 
 const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
