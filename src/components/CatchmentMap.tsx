@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle } from "lucide-react";
+import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle, Info } from "lucide-react";
 import { CAT4_AREAS, CAT5_ONLY_AREAS, CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
 import { FEEDER_SCHOOLS } from "@/data/feederSchools";
 
@@ -399,26 +399,30 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                         {searchResult.distMiles.toFixed(1)} miles from school
                       </span>
                     </div>
-                    {searchResult.categories.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {searchResult.categories.map((cat) => (
-                          <span
-                            key={cat}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-full font-body inline-flex items-center gap-1"
-                            style={{
-                              backgroundColor:
-                                cat === "Category 3" ? CAT3_COLOR + "22" : cat === "Category 4" ? CAT4_COLOR + "22" : CAT5_COLOR + "22",
-                              color: cat === "Category 3" ? CAT3_COLOR : cat === "Category 4" ? CAT4_COLOR : CAT5_COLOR,
-                            }}
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                            {cat}{cat === "Category 3" ? " (Feeder)" : ""}
-                          </span>
-                        ))}
+
+                    {!searchResult.inCatchment ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-body font-semibold text-destructive">
+                          This postcode is outside the catchment area — not eligible for day student Categories 1–5.
+                        </p>
+                        <p className="text-[11px] font-body text-muted-foreground">
+                          Boarding places are assessed separately and do not depend on home postcode or primary school.
+                        </p>
+                      </div>
+                    ) : searchResult.categories.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {searchResult.categories.map((cat) => (
+                            <CategoryBadge key={cat} category={cat} />
+                          ))}
+                        </div>
+                        <p className="text-[11px] font-body text-muted-foreground italic">
+                          Boarding places are assessed separately — postcode and school are not relevant.
+                        </p>
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground font-body">
-                        Not within any catchment category.
+                        Not within any specific priority category. You may still be eligible under Category 6 (Others).
                       </p>
                     )}
                   </div>
