@@ -358,20 +358,11 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 placeholder="Enter your postcode or address…"
                 className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {searchQuery && (
-                  <button onClick={clearSearch} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleSearch()}
-                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
-                >
-                  {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
+              {searchQuery && (
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-4 w-4" />
                 </button>
-              </div>
+              )}
             </div>
 
             {/* Primary school selector */}
