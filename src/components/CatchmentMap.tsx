@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Search, MapPin, Loader2, X, ChevronRight, GraduationCap, CheckCircle, Info } from "lucide-react";
-import { CAT4_AREAS, CAT5_ONLY_AREAS, CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
+import { CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST, POSTCODE_NAMES, GEOJSON_FILES } from "@/data/postcodeAreas";
 import { FEEDER_SCHOOLS } from "@/data/feederSchools";
 
 const SCHOOL_LAT = 51.4493;
@@ -175,29 +175,47 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
     circle.bindTooltip("Category 3 — 4.6 mi radius", { sticky: true, className: "map-tooltip" });
     layersRef.current.cat3 = [circle];
 
-    // Cat 4 polygons
-    CAT4_AREAS.forEach((area) => {
-      const polygon = L.polygon(area.coords, {
-        color: CAT4_COLOR,
-        fillColor: CAT4_COLOR,
-        fillOpacity: 0.1,
-        weight: 1.5,
-      }).addTo(map);
-      polygon.bindTooltip(area.name, { sticky: true, className: "map-tooltip" });
-      layersRef.current.cat4.push(polygon);
-    });
-
-    // Cat 5 polygons
-    CAT5_ONLY_AREAS.forEach((area) => {
-      const polygon = L.polygon(area.coords, {
-        color: CAT5_COLOR,
-        fillColor: CAT5_COLOR,
-        fillOpacity: 0.1,
-        weight: 1.5,
-      }).addTo(map);
-      polygon.bindTooltip(area.name, { sticky: true, className: "map-tooltip" });
-      layersRef.current.cat5.push(polygon);
-    });
+    // Load real GeoJSON boundaries
+    const loadGeoJSON = async () => {
+      for (const file of GEOJSON_FILES) {
+        try {
+          const res = await fetch(`/geojson/${file}.geojson`);
+          const geojson = await res.json();
+          
+          geojson.features.forEach((feature: any) => {
+            const code = feature.properties?.name;
+            if (!code) return;
+            
+            const isCat4 = CAT4_POSTCODES_LIST.includes(code);
+            const isCat5Only = CAT5_ONLY_POSTCODES_LIST.includes(code);
+            if (!isCat4 && !isCat5Only) return;
+            
+            const color = isCat4 ? CAT4_COLOR : CAT5_COLOR;
+            const category = isCat4 ? "cat4" : "cat5";
+            const name = POSTCODE_NAMES[code] || code;
+            
+            const layer = L.geoJSON(feature, {
+              style: {
+                color,
+                fillColor: color,
+                fillOpacity: 0.1,
+                weight: 1.5,
+              },
+            }).addTo(map);
+            layer.bindTooltip(name, { sticky: true, className: "map-tooltip" });
+            layersRef.current[category].push(layer);
+            
+            // Respect current toggle state
+            if (!activeCategories.has(category)) {
+              map.removeLayer(layer);
+            }
+          });
+        } catch (e) {
+          console.error(`Failed to load ${file}.geojson:`, e);
+        }
+      }
+    };
+    loadGeoJSON();
 
     return () => {
       map.remove();
