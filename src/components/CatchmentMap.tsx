@@ -358,20 +358,11 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 placeholder="Enter your postcode or address…"
                 className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {searchQuery && (
-                  <button onClick={clearSearch} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleSearch()}
-                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
-                >
-                  {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
+              {searchQuery && (
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-4 w-4" />
                 </button>
-              </div>
+              )}
             </div>
 
             {/* Primary school selector */}
@@ -387,16 +378,25 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 }}
                 onFocus={() => setShowSchoolDropdown(true)}
                 placeholder="Select primary school…"
-                className="w-full pl-11 pr-10 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
+                className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
-              {selectedSchool && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {selectedSchool && (
+                  <button
+                    onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
+                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
                 <button
-                  onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => handleSearch()}
+                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
                 >
-                  <X className="h-4 w-4" />
+                  {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
                 </button>
-              )}
+              </div>
               {showSchoolDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
                   {(schoolSearch
