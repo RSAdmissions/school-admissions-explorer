@@ -537,13 +537,25 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <QuestionHeader icon={School} title="Primary School" subtitle="Question 6 of 7" />
-              <input
-                type="text"
-                value={searchSchool}
-                onChange={(e) => setSearchSchool(e.target.value)}
-                placeholder="Search for your school…"
-                className={`${inputClass} mb-3`}
-              />
+              <div className="relative mb-3">
+                <School className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchSchool}
+                  onChange={(e) => setSearchSchool(e.target.value)}
+                  placeholder="Search for your school…"
+                  className={`${inputClass} pl-10`}
+                />
+                {searchSchool && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchSchool("")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
               <div className="max-h-[240px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                 {filteredSchools.map((school, i) => (
                   <motion.button
