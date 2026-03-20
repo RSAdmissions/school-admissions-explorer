@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ClipboardCheck, ArrowRight, GraduationCap, Shield } from "lucide-react";
 import CatchmentMap from "@/components/CatchmentMap";
 import EligibilityForm from "@/components/EligibilityForm";
+import TriageFlow from "@/components/TriageFlow";
+import type { TriageResult } from "@/components/TriageFlow";
 import type { CatchmentResult } from "@/components/CatchmentMap";
 
 const fadeUp = {
@@ -19,10 +21,17 @@ const stagger = {
 };
 
 const Index = () => {
-  const [screen, setScreen] = useState<"intro" | "tool">("intro");
+  const [screen, setScreen] = useState<"intro" | "triage" | "tool">("intro");
   const [activeTab, setActiveTab] = useState<"map" | "eligibility">("map");
   const [catchmentResult, setCatchmentResult] = useState<CatchmentResult | null>(null);
   const [formPostcode, setFormPostcode] = useState("");
+  const [triageResult, setTriageResult] = useState<TriageResult | null>(null);
+
+  const handleTriageComplete = (result: TriageResult) => {
+    setTriageResult(result);
+    setActiveTab("eligibility");
+    setScreen("tool");
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -146,7 +155,7 @@ const Index = () => {
               <motion.button
                 whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(330 100% 80% / 0.25)" }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { setActiveTab("eligibility"); setScreen("tool"); }}
+                onClick={() => setScreen("triage")}
                 className="group relative px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-body text-base font-semibold transition-colors duration-300 flex items-center gap-3"
               >
                 <GraduationCap className="h-5 w-5" />
@@ -171,6 +180,12 @@ const Index = () => {
             </motion.p>
           </motion.div>
         </motion.div>
+      ) : screen === "triage" ? (
+        <TriageFlow
+          key="triage"
+          onComplete={handleTriageComplete}
+          onBack={() => setScreen("intro")}
+        />
       ) : (
         <motion.div
           key="tool"
@@ -282,7 +297,7 @@ const Index = () => {
                 </motion.div>
               )}
 
-              {activeTab === "eligibility" && (
+              {activeTab === "eligibility" && triageResult && (
                 <motion.div
                   key="eligibility"
                   initial={{ opacity: 0, x: 20 }}
@@ -302,7 +317,16 @@ const Index = () => {
                       Answer a few questions to find out which admission categories apply.
                     </p>
                   </motion.div>
-                  <EligibilityForm catchmentResult={catchmentResult} onPostcodeChange={setFormPostcode} />
+                  <EligibilityForm
+                    catchmentResult={catchmentResult}
+                    onPostcodeChange={setFormPostcode}
+                    entryType={triageResult.entryType}
+                    placeType={triageResult.placeType}
+                    onStartOver={() => {
+                      setTriageResult(null);
+                      setScreen("triage");
+                    }}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
