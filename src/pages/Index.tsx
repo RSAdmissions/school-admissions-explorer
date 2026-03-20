@@ -146,7 +146,7 @@ const Index = () => {
               <motion.button
                 whileHover={{ scale: 1.03, boxShadow: "0 0 40px hsl(330 100% 80% / 0.25)" }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setScreen("tool")}
+                onClick={() => { setActiveTab("eligibility"); setScreen("tool"); }}
                 className="group relative px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-body text-base font-semibold transition-colors duration-300 flex items-center gap-3"
               >
                 <GraduationCap className="h-5 w-5" />
