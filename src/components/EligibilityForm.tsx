@@ -6,15 +6,13 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Calendar,
-  Home,
   School,
   MapPin as MapPinIcon,
   Trophy,
   Info,
-  GraduationCap,
 } from "lucide-react";
 import type { CatchmentResult } from "./CatchmentMap";
+import type { EntryType } from "./TriageFlow";
 
 // --- DATA ---
 
@@ -38,65 +36,9 @@ function getPostcodePrefix(postcode: string): string {
   return cleaned;
 }
 
-// --- ENTRY TYPE LOGIC ---
-
-type EntryType = "year7" | "in-year" | "sixth-form" | null;
-
-const ENTRY_TABLE = [
-  { dobFrom: "2014-09-01", dobTo: "2015-08-31", yearOfEntry: "September 2026", deadline: "30 June 2025" },
-  { dobFrom: "2015-09-01", dobTo: "2016-08-31", yearOfEntry: "September 2027", deadline: "30 June 2026" },
-  { dobFrom: "2016-09-01", dobTo: "2017-08-31", yearOfEntry: "September 2028", deadline: "30 June 2027" },
-  { dobFrom: "2017-09-01", dobTo: "2018-08-31", yearOfEntry: "September 2029", deadline: "30 June 2028" },
-  { dobFrom: "2018-09-01", dobTo: "2019-08-31", yearOfEntry: "September 2030", deadline: "30 June 2029" },
-];
-
-const SIXTH_FORM_TABLE = [
-  { dobFrom: "2009-09-01", dobTo: "2010-08-31", yearOfEntry: "September 2026", deadline: "1 November 2025" },
-  { dobFrom: "2010-09-01", dobTo: "2011-08-31", yearOfEntry: "September 2027", deadline: "1 November 2026" },
-  { dobFrom: "2011-09-01", dobTo: "2012-08-31", yearOfEntry: "September 2028", deadline: "1 November 2027" },
-  { dobFrom: "2012-09-01", dobTo: "2013-08-31", yearOfEntry: "September 2029", deadline: "1 November 2028" },
-  { dobFrom: "2013-09-01", dobTo: "2014-08-31", yearOfEntry: "September 2030", deadline: "1 November 2029" },
-];
-
-function determineEntryType(dob: string): EntryType {
-  if (!dob) return null;
-  const d = new Date(dob);
-
-  // Year 7: check if DOB falls in any Year 7 entry range
-  for (const row of ENTRY_TABLE) {
-    if (d >= new Date(row.dobFrom) && d <= new Date(row.dobTo)) return "year7";
-  }
-
-  // Sixth form: Year 12 age range
-  for (const row of SIXTH_FORM_TABLE) {
-    if (d >= new Date(row.dobFrom) && d <= new Date(row.dobTo)) return "sixth-form";
-  }
-
-  // In-Year: secondary school age but not Year 7 or Sixth Form
-  // Born between Sep 2008 and Aug 2014 (already past Year 7 but still in secondary)
-  if (d >= new Date("2008-09-01") && d <= new Date("2014-08-31")) return "in-year";
-
-  // Too young (after latest Year 7 range) or too old
-  if (d > new Date("2019-08-31")) return null; // too young
-  if (d < new Date("2008-09-01")) return null; // too old
-
-  return "in-year";
-}
-
-function getEntryTableRow(dob: string) {
-  if (!dob) return null;
-  const d = new Date(dob);
-  for (const row of ENTRY_TABLE) {
-    if (d >= new Date(row.dobFrom) && d <= new Date(row.dobTo)) return row;
-  }
-  return null;
-}
-
 // --- TYPES ---
 
 interface FormData {
-  dob: string;
-  placeType: "day" | "boarding" | "";
   hasEHCP: boolean;
   isLookedAfter: boolean;
   isPupilPremium: boolean;
@@ -118,8 +60,6 @@ interface CategoryResult {
 // --- INFO TOOLTIPS ---
 
 const STEP_TOOLTIPS: Record<string, string> = {
-  dob: "Your child's date of birth determines which entry point applies: Year 7, In-Year transfer, or Sixth Form (Year 12). This also sets the relevant application deadline.",
-  placeType: "Day students attend school during the day and must live within the catchment area for Categories 1–5. Boarding students live at the school during term time and are assessed independently of geography.",
   ehcp: "An Education, Health and Care Plan (EHCP) is a legal document for children with special educational needs. If it names Reading School, your child is guaranteed a place subject to achieving an eligible score.",
   circumstances: "These priority criteria cover looked-after children, pupil/service premium eligibility, social & welfare needs, and children of school staff. They are assessed in the order listed.",
   sporting: "15 places are reserved for candidates who demonstrate exceptional sporting aptitude. This applies across both day and boarding places and is assessed via a separate sporting assessment.",
@@ -130,13 +70,13 @@ const STEP_TOOLTIPS: Record<string, string> = {
 
 // --- LOGIC ---
 
-function calculateEligibility(data: FormData, entryType: EntryType): CategoryResult[] {
+function calculateEligibility(data: FormData, entryType: EntryType, placeType: "day" | "boarding"): CategoryResult[] {
   const results: CategoryResult[] = [];
   const prefix = getPostcodePrefix(data.postcode);
   const isFeeder = FEEDER_SCHOOLS.includes(data.primarySchool);
   const isPriority = PRIORITY_POSTCODES.includes(prefix);
   const isCatchment = CATCHMENT_POSTCODES.includes(prefix);
-  const isBoarding = data.placeType === "boarding";
+  const isBoarding = placeType === "boarding";
   const isInYear = entryType === "in-year";
 
   if (data.hasEHCP) {
@@ -172,9 +112,7 @@ function calculateEligibility(data: FormData, entryType: EntryType): CategoryRes
     });
   }
 
-  // For boarding: no geography/school criteria
   if (!isBoarding) {
-    // For in-year: no feeder school category
     if (!isInYear && isFeeder) {
       results.push({
         name: "Category 3",
@@ -256,15 +194,16 @@ const InfoTooltip = ({ text }: { text: string }) => {
 interface EligibilityFormProps {
   catchmentResult?: CatchmentResult | null;
   onPostcodeChange?: (postcode: string) => void;
+  entryType: EntryType;
+  placeType: "day" | "boarding";
+  onStartOver?: () => void;
 }
 
-const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormProps) => {
+const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeType, onStartOver }: EligibilityFormProps) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [acknowledged, setAcknowledged] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    dob: "",
-    placeType: "",
     hasEHCP: false,
     isLookedAfter: false,
     isPupilPremium: false,
@@ -279,37 +218,18 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
   const [searchSchool, setSearchSchool] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const entryType = useMemo(() => determineEntryType(formData.dob), [formData.dob]);
-  const entryRow = useMemo(() => getEntryTableRow(formData.dob), [formData.dob]);
-  const isBoarding = formData.placeType === "boarding";
+  const isBoarding = placeType === "boarding";
 
-  // Dynamic steps based on entry type and place type
+  // Dynamic steps based on entry type and place type (DOB and placeType already answered)
   const steps = useMemo(() => {
-    const s: string[] = ["gate", "dob"];
-
-    if (!entryType) return s;
-
-    if (entryType === "sixth-form") {
-      s.push("sixth-form-info");
-      return s;
-    }
-
-    // Both year7 and in-year continue with:
-    s.push("placeType");
-
-    if (!formData.placeType) return s;
-
-    s.push("ehcp", "circumstances", "sporting");
+    const s: string[] = ["gate", "ehcp", "circumstances", "sporting"];
 
     if (!isBoarding) {
       if (entryType === "year7") {
-        // If school is "Other" or not yet selected, combine school+postcode
         s.push("school");
-        // Only show separate postcode if a feeder school is selected
         if (formData.primarySchool && formData.primarySchool !== "Other (not listed)" && FEEDER_SCHOOLS.includes(formData.primarySchool)) {
           s.push("postcode");
         }
-        // If "Other" is selected, postcode is on the school step
       } else {
         // In-year: no school step, just postcode
         s.push("postcode");
@@ -318,11 +238,11 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
 
     s.push("results");
     return s;
-  }, [entryType, formData.placeType, isBoarding, formData.primarySchool]);
+  }, [entryType, isBoarding, formData.primarySchool]);
 
   const currentStepName = steps[step] || "gate";
   const totalQuestions = steps.length - 2; // minus gate and results
-  const questionNumber = step - 1; // gate is 0, first question is step 1
+  const questionNumber = step; // gate is 0, first question is step 1
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -341,11 +261,11 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
   const back = () => goTo(step - 1);
 
   const handleSubmit = () => {
-    setResults(calculateEligibility(formData, entryType));
+    setResults(calculateEligibility(formData, entryType, placeType));
     goTo(steps.indexOf("results"));
   };
 
-  const progress = step === 0 ? 0 : currentStepName === "results" ? 100 : Math.round((questionNumber / Math.max(totalQuestions - 1, 1)) * 100);
+  const progress = step === 0 ? 0 : currentStepName === "results" ? 100 : Math.round((questionNumber / Math.max(totalQuestions, 1)) * 100);
 
   const filteredSchools = searchSchool
     ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(searchSchool.toLowerCase()))
@@ -354,12 +274,11 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
   const inputClass =
     "w-full px-4 py-3.5 bg-secondary/50 text-foreground border border-border rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 font-body text-sm transition-all";
 
-  // Is the school step combined with postcode?
   const isSchoolCombined = entryType === "year7" && !isBoarding && (formData.primarySchool === "Other (not listed)" || !FEEDER_SCHOOLS.includes(formData.primarySchool));
 
   const NavButtons = ({ canContinue = true, isSubmit = false }: { canContinue?: boolean; isSubmit?: boolean }) => (
     <div className="flex gap-3 mt-8">
-      {step > 1 && (
+      {step > 0 && (
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -429,7 +348,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
   return (
     <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-hidden">
       {/* Progress bar */}
-      {step > 0 && currentStepName !== "results" && currentStepName !== "sixth-form-info" && (
+      {step > 0 && currentStepName !== "results" && (
         <div className="h-1 bg-secondary">
           <motion.div
             className="h-full bg-primary rounded-r-full"
@@ -440,6 +359,16 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
       )}
 
       <div className="p-6 md:p-8">
+        {/* Entry type badge */}
+        <div className="flex items-center gap-2 mb-4 text-xs font-body text-muted-foreground">
+          <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+            {entryType === "year7" ? "Year 7" : "In-Year"}
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground font-medium">
+            {placeType === "day" ? "Day" : "Boarding"}
+          </span>
+        </div>
+
         <AnimatePresence mode="wait" custom={direction}>
           {/* Gate */}
           {currentStepName === "gate" && (
@@ -480,215 +409,6 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
                 Start Eligibility Check
                 <ArrowRight className="h-4 w-4" />
               </motion.button>
-            </motion.div>
-          )}
-
-          {/* DOB */}
-          {currentStepName === "dob" && (
-            <motion.div
-              key="dob"
-              custom={direction}
-              variants={pageVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <QuestionHeader
-                icon={Calendar}
-                title="Date of Birth"
-                subtitle={`Question ${questionNumber} of ${totalQuestions}`}
-                tooltip={STEP_TOOLTIPS.dob}
-              />
-              <input
-                type="date"
-                value={formData.dob}
-                onChange={(e) => handleChange("dob", e.target.value)}
-                className={inputClass}
-              />
-
-              {/* Show entry type feedback */}
-              {formData.dob && entryType && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-body font-semibold text-foreground">
-                      {entryType === "year7" && "Year 7 Entry"}
-                      {entryType === "in-year" && "In-Year Transfer"}
-                      {entryType === "sixth-form" && "Sixth Form (Year 12) Entry"}
-                    </span>
-                  </div>
-                  {entryType === "year7" && entryRow && (
-                    <p className="text-xs text-muted-foreground font-body">
-                      Your child would enter in <strong className="text-foreground">{entryRow.yearOfEntry}</strong>.
-                      Registration deadline: <strong className="text-foreground">{entryRow.deadline}</strong>.
-                    </p>
-                  )}
-                  {entryType === "in-year" && (
-                    <p className="text-xs text-muted-foreground font-body">
-                      Your child is of secondary school age and would apply for an in-year transfer. The process is similar to Year 7 but without feeder school priority.
-                    </p>
-                  )}
-                  {entryType === "sixth-form" && (
-                    <p className="text-xs text-muted-foreground font-body">
-                      Your child is eligible for Year 12 entry. Click continue for more information.
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
-              {formData.dob && !entryType && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-4 rounded-xl bg-destructive/5 border border-destructive/20"
-                >
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-sm font-body font-semibold text-foreground">
-                      Not eligible for current entry points
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-body mt-1">
-                    Based on this date of birth, your child does not fall within the current entry windows. Please check the date or contact the school for guidance.
-                  </p>
-                </motion.div>
-              )}
-
-              <NavButtons canContinue={!!formData.dob && !!entryType} />
-            </motion.div>
-          )}
-
-          {/* Sixth Form Info */}
-          {currentStepName === "sixth-form-info" && (
-            <motion.div
-              key="sixth-form"
-              custom={direction}
-              variants={pageVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <QuestionHeader
-                icon={GraduationCap}
-                title="Reading School — Year 12 Entry"
-                subtitle="Sixth Form Admissions"
-              />
-              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-6">
-                Sixth Form entry at Reading School follows a separate admissions process. Below is the indicative timetable for the next 5 years.
-              </p>
-
-              <div className="overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm font-body">
-                  <thead>
-                    <tr className="bg-secondary/50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date of Birth</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Year of Entry</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Registration Deadline</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {SIXTH_FORM_TABLE.map((row, i) => {
-                      const fromDate = new Date(row.dobFrom);
-                      const toDate = new Date(row.dobTo);
-                      const dobStr = `${fromDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} – ${toDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
-                      const dob = formData.dob ? new Date(formData.dob) : null;
-                      const isMatch = dob && dob >= fromDate && dob <= toDate;
-
-                      return (
-                        <motion.tr
-                          key={i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 + i * 0.06 }}
-                          className={`border-t border-border ${isMatch ? "bg-primary/5" : ""}`}
-                        >
-                          <td className="px-4 py-3 text-foreground">{dobStr}</td>
-                          <td className="px-4 py-3 text-foreground font-semibold">{row.yearOfEntry}</td>
-                          <td className="px-4 py-3 text-foreground">{row.deadline}</td>
-                        </motion.tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <p className="text-xs text-muted-foreground font-body mt-4 italic">
-                For full details on Sixth Form admissions criteria, entry requirements, and how to apply, please visit the Reading School website or contact the admissions office.
-              </p>
-
-              <div className="flex gap-3 mt-8">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={back}
-                  className="flex items-center gap-2 px-5 py-3 bg-secondary text-foreground rounded-xl font-body text-sm font-medium hover:bg-secondary/80 transition-all"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setStep(0);
-                    setAcknowledged(false);
-                  }}
-                  className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-body text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                >
-                  Start Over
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Day or Boarding */}
-          {currentStepName === "placeType" && (
-            <motion.div
-              key="placeType"
-              custom={direction}
-              variants={pageVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <QuestionHeader
-                icon={Home}
-                title="Day or Boarding?"
-                subtitle={`Question ${questionNumber} of ${totalQuestions}`}
-                tooltip={STEP_TOOLTIPS.placeType}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                {(["day", "boarding"] as const).map((type, i) => (
-                  <motion.button
-                    key={type}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.08 }}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="button"
-                    onClick={() => handleChange("placeType", type)}
-                    className={`p-6 rounded-xl border-2 text-center transition-colors ${
-                      formData.placeType === type
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-secondary/30 hover:border-primary/30"
-                    }`}
-                  >
-                    <span className="text-3xl block mb-2">{type === "day" ? "🏠" : "🛏️"}</span>
-                    <span className={`text-sm font-body font-semibold ${formData.placeType === type ? "text-primary" : "text-muted-foreground"}`}>
-                      {type === "day" ? "Day Place" : "Boarding Place"}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-              <NavButtons canContinue={!!formData.placeType} />
             </motion.div>
           )}
 
@@ -841,7 +561,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
             </motion.div>
           )}
 
-          {/* Primary School (with optional combined postcode for "Other") */}
+          {/* Primary School */}
           {currentStepName === "school" && (
             <motion.div
               key="school"
@@ -962,7 +682,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
             </motion.div>
           )}
 
-          {/* Postcode (separate step - only for feeder school day students) */}
+          {/* Postcode (separate step) */}
           {currentStepName === "postcode" && (
             <motion.div
               key="postcode"
@@ -1050,7 +770,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.25 + i * 0.1, type: "spring" }}
                           >
-                            <CheckCircle className={`h-4 w-4 shrink-0 ${cat.highlight ? "text-primary" : "text-primary"}`} />
+                            <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                           </motion.div>
                           <span className="font-semibold font-body text-sm text-foreground">{cat.name}</span>
                         </div>
@@ -1073,8 +793,6 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
                     setStep(0);
                     setAcknowledged(false);
                     setFormData({
-                      dob: "",
-                      placeType: "",
                       hasEHCP: false,
                       isLookedAfter: false,
                       isPupilPremium: false,
@@ -1085,6 +803,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange }: EligibilityFormP
                       primarySchool: "",
                       postcode: "",
                     });
+                    onStartOver?.();
                   }}
                   className="flex-1 py-3 bg-secondary text-foreground rounded-xl font-body text-sm font-medium hover:bg-secondary/80 transition-all"
                 >
