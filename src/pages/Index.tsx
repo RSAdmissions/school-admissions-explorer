@@ -29,7 +29,8 @@ const Index = () => {
 
   const handleTriageComplete = (result: TriageResult) => {
     setTriageResult(result);
-    setActiveTab("eligibility");
+    // Day students benefit from seeing the map first; boarding skips geography
+    setActiveTab(result.placeType === "day" ? "map" : "eligibility");
     setScreen("tool");
   };
 
