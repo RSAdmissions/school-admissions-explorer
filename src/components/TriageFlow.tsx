@@ -317,7 +317,11 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                 </div>
 
                 <p className="text-xs text-muted-foreground font-body mt-4 italic">
-                  For full details on Sixth Form admissions criteria, entry requirements, and how to apply, please visit the Reading School website or contact the admissions office.
+                  For full details on Sixth Form admissions criteria, entry requirements, and how to apply, please visit the{" "}
+                  <a href="https://www.reading-school.co.uk/page/?title=Reading+School+%2D+Year+12+Entry&pid=96" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                    Reading School - Year 12 Entry
+                  </a>{" "}
+                  page.
                 </p>
 
                 <div className="flex gap-3 mt-8">
