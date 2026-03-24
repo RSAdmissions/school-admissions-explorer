@@ -378,81 +378,85 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
               </div>
             </div>
 
-            {/* Primary school selector */}
-            <div className="relative" ref={schoolDropdownRef}>
-              <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                value={selectedSchool ? selectedSchool : schoolSearch}
-                onChange={(e) => {
-                  setSchoolSearch(e.target.value);
-                  setSelectedSchool("");
-                  setShowSchoolDropdown(true);
-                }}
-                onFocus={() => setShowSchoolDropdown(true)}
-                placeholder="Select primary school…"
-                className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {selectedSchool && (
-                  <button
-                    onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
-                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleSearch()}
-                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
-                >
-                  {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
-                </button>
-              </div>
-              {showSchoolDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
-                  {(schoolSearch
-                    ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(schoolSearch.toLowerCase()))
-                    : FEEDER_SCHOOLS
-                  ).map((school) => (
-                    <button
-                      key={school}
-                      onClick={() => {
-                        setSelectedSchool(school);
-                        setSchoolSearch("");
-                        setShowSchoolDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm font-body text-foreground hover:bg-primary/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                    >
-                      {school}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => {
-                      setSelectedSchool("Other (not listed)");
-                      setSchoolSearch("");
-                      setShowSchoolDropdown(false);
+            {/* Primary school selector - only for Year 7 */}
+            {entryType !== "in-year" && (
+              <>
+                <div className="relative" ref={schoolDropdownRef}>
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={selectedSchool ? selectedSchool : schoolSearch}
+                    onChange={(e) => {
+                      setSchoolSearch(e.target.value);
+                      setSelectedSchool("");
+                      setShowSchoolDropdown(true);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm font-body text-muted-foreground italic hover:bg-primary/10 transition-colors last:rounded-b-xl"
-                  >
-                    Other (not listed)
-                  </button>
+                    onFocus={() => setShowSchoolDropdown(true)}
+                    placeholder="Select primary school…"
+                    className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {selectedSchool && (
+                      <button
+                        onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
+                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleSearch()}
+                      disabled={isSearching || !searchQuery.trim() || !selectedSchool}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
+                    >
+                      {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
+                    </button>
+                  </div>
+                  {showSchoolDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                      {(schoolSearch
+                        ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(schoolSearch.toLowerCase()))
+                        : FEEDER_SCHOOLS
+                      ).map((school) => (
+                        <button
+                          key={school}
+                          onClick={() => {
+                            setSelectedSchool(school);
+                            setSchoolSearch("");
+                            setShowSchoolDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm font-body text-foreground hover:bg-primary/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                        >
+                          {school}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setSelectedSchool("Other (not listed)");
+                          setSchoolSearch("");
+                          setShowSchoolDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm font-body text-muted-foreground italic hover:bg-primary/10 transition-colors last:rounded-b-xl"
+                      >
+                        Other (not listed)
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Selected school badge */}
-            {selectedSchool && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
-                <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-xs font-body text-foreground truncate">{selectedSchool}</span>
-                {FEEDER_SCHOOLS.includes(selectedSchool) && (
-                  <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-body font-semibold whitespace-nowrap">
-                    Feeder School ✓
-                  </span>
+                {/* Selected school badge */}
+                {selectedSchool && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-xs font-body text-foreground truncate">{selectedSchool}</span>
+                    {FEEDER_SCHOOLS.includes(selectedSchool) && (
+                      <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-body font-semibold whitespace-nowrap">
+                        Feeder School ✓
+                      </span>
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
 
             {/* Search result card */}
