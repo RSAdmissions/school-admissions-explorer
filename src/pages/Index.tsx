@@ -6,6 +6,7 @@ import EligibilityForm from "@/components/EligibilityForm";
 import TriageFlow from "@/components/TriageFlow";
 import type { TriageResult } from "@/components/TriageFlow";
 import type { CatchmentResult } from "@/components/CatchmentMap";
+import { CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
