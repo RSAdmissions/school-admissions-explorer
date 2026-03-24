@@ -529,38 +529,11 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
         </div>
       </div>
 
-      {/* Postcode reference */}
-      <div className="grid md:grid-cols-2 gap-3 pt-4">
-        <div className="p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAT4_COLOR }} />
-            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Priority Home Postcodes</h4>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {CAT4_POSTCODES_LIST.map((pc) => (
-              <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
-                {pc}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAT5_COLOR }} />
-            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Wider Catchment Area Home Postcodes</h4>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {CAT5_ONLY_POSTCODES_LIST.map((pc) => (
-              <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
-                {pc}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <p className="text-[11px] text-muted-foreground font-body italic pt-2">
-        ⚠️ Boundaries shown are approximate and for indicative purposes only. Please refer to the official admissions policy.
+        ⚠️ Boundaries shown are approximate and for indicative purposes only. Please refer to the{" "}
+        <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+          official admissions policy
+        </a>.
       </p>
     </div>
   );
