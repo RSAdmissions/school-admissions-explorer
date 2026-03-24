@@ -347,7 +347,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
   const isLastBeforeResults = step === steps.indexOf("results") - 1;
 
   return (
-    <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-hidden">
+    <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-visible">
       {/* Progress bar */}
       {step > 0 && currentStepName !== "results" && (
         <div className="h-1 bg-secondary">
