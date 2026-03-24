@@ -266,7 +266,7 @@ const Index = () => {
                       Search your address to see which categories you may be eligible for.
                     </p>
                   </motion.div>
-                  <CatchmentMap onResult={setCatchmentResult} externalPostcode={formPostcode} />
+                  <CatchmentMap onResult={setCatchmentResult} externalPostcode={formPostcode} entryType={triageResult?.entryType} />
 
                   {/* Persistent prompt to go to eligibility */}
                   <motion.div
