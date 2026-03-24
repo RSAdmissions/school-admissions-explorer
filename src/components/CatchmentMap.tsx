@@ -195,12 +195,12 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
             const category = isCat4 ? "cat4" : "cat5";
             const name = POSTCODE_NAMES[code] || code;
             
-            const layer = L.geoJSON(feature, {
+             const layer = L.geoJSON(feature, {
               style: {
-                color,
+                color: color,
                 fillColor: color,
                 fillOpacity: 0.1,
-                weight: 1.5,
+                weight: 2.5,
               },
             }).addTo(map);
             layer.bindTooltip(name, { sticky: true, className: "map-tooltip" });
