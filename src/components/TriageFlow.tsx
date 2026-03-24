@@ -195,9 +195,10 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                       </p>
                     )}
                     {entryType === "in-year" && (
-                      <p className="text-xs text-muted-foreground font-body">
-                        Your child is of secondary school age and would apply for an in-year transfer.
-                      </p>
+                      <div className="text-xs text-muted-foreground font-body space-y-1.5">
+                        <p>Your child is of secondary school age and would apply for an in-year transfer.</p>
+                        <p>In-year admissions are for children who need to join or change school outside the normal Year 7 entry round. Places are subject to availability and eligibility criteria apply.</p>
+                      </div>
                     )}
                     {entryType === "sixth-form" && (
                       <p className="text-xs text-muted-foreground font-body">
