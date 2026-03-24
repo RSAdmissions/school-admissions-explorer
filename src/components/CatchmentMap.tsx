@@ -47,6 +47,7 @@ export interface CatchmentResult {
 interface CatchmentMapProps {
   onResult?: (result: CatchmentResult | null) => void;
   externalPostcode?: string;
+  entryType?: "year7" | "in-year" | "sixth-form" | null;
 }
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   "Category 3": "Named feeder primary school — 50% of remaining places after Categories 1 & 2.",
