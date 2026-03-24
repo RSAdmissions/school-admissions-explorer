@@ -531,7 +531,7 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
         <div className="p-4 bg-card border border-border rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAT5_COLOR }} />
-            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Category 5 Additional</h4>
+            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Wider Catchment Area Home Postcodes</h4>
           </div>
           <div className="flex flex-wrap gap-1">
             {CAT5_ONLY_POSTCODES_LIST.map((pc) => (
