@@ -542,7 +542,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                 tooltip={STEP_TOOLTIPS.sporting}
               />
               <p className="text-sm text-muted-foreground font-body mb-4">
-                Will your child be applying under the Sporting Aptitude criteria? (15 places reserved across day & boarding)
+                Will your child be participating in the Sporting Aptitude Assessment? (15 places reserved across day & boarding)
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[true, false].map((val, i) => (
