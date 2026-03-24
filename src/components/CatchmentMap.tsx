@@ -83,7 +83,7 @@ const CategoryBadge = ({ category }: { category: string }) => {
   );
 };
 
-const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
+const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
