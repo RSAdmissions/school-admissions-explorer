@@ -366,7 +366,10 @@ const Index = () => {
 
           <footer className="border-t border-border py-6 text-center">
             <p className="text-[11px] text-muted-foreground font-body">
-              Indicative information only. Refer to the official Reading School admissions policy.
+              Indicative information only. Refer to the{" "}
+              <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                official Reading School admissions policy
+              </a>.
             </p>
           </footer>
         </motion.div>
