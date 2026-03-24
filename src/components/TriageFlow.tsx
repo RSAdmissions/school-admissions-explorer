@@ -158,7 +158,7 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                   </motion.div>
                   <div>
                     <h3 className="text-lg font-heading font-bold text-foreground">
-                      Date of Birth
+                      Child's Date of Birth
                     </h3>
                     <p className="text-xs text-muted-foreground font-body">
                       This determines the entry point for your child
