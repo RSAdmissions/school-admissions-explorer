@@ -326,6 +326,7 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
+                </motion.div>
               )}
 
               {activeTab === "eligibility" && triageResult && (
