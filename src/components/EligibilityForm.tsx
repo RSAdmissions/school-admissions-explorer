@@ -703,9 +703,9 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
             >
               <QuestionHeader
                 icon={MapPinIcon}
-                title="Your Postcode"
+                title="Your Home Postcode"
                 subtitle={`Question ${questionNumber} of ${totalQuestions}`}
-                tooltip={STEP_TOOLTIPS.postcode}
+                tooltip="Your priority home postcode determines whether you fall into a Priority Home Postcode area (Category 4) or the Wider Catchment Area (Category 5)."
               />
               <input
                 type="text"
