@@ -82,8 +82,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (data.hasEHCP) {
     results.push({
       name: "Category 0",
-      description: "EHCP — place allocated as long as an eligible score is achieved.",
-      allocation: "As needed",
+      description: "Education & Health Care Plan – a place will be allocated as long as an eligible score is achieved.",
+      allocation: "As many places as needed",
       highlight: true,
     });
   }
@@ -98,8 +98,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (cat1Reasons.length > 0) {
     results.push({
       name: "Category 1",
-      description: `${cat1Reasons.join(", ")} — as many places as apply and achieve an eligible score, prioritised in the order listed.`,
-      allocation: "As many as qualify",
+      description: `(Previously) Looked After / Adopted, Pupil Premium, Service Premium, Social & Welfare Need, Child of Staff — as many places as apply and achieve an eligible score, prioritised in the order listed. Catchment area requirement applies for all Category 1 except (Previously) Looked After/Adopted.`,
+      allocation: "As many places as needed",
       highlight: true,
     });
   }
@@ -107,8 +107,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (data.hasSportingAptitude) {
     results.push({
       name: "Category 2",
-      description: "Sporting Aptitude — 15 places reserved across day and boarding.",
-      allocation: "15 places total",
+      description: "Sporting Aptitude — 15 places reserved across day and boarding. Based on results of Sporting Aptitude assessment.",
+      allocation: "15 places available",
     });
   }
 
@@ -116,24 +116,24 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
     if (!isInYear && isFeeder) {
       results.push({
         name: "Category 3",
-        description: `${data.primarySchool} is a named Reading feeder school — 50% of remaining places after Categories 1 & 2.`,
-        allocation: "50% of remaining",
+        description: `${data.primarySchool} is a named feeder school — 50% of places remaining after Categories 1 & 2 have been allocated are reserved for these.`,
+        allocation: "50% of remaining places",
       });
     }
 
     if (isPriority) {
       results.push({
         name: "Category 4",
-        description: `${prefix} is a Priority Postcode — 80% of remaining places after Categories 1–3.`,
-        allocation: "80% of remaining",
+        description: `${prefix} is a Priority Home Postcode — 80% of places remaining after Categories 1–3 have been allocated are reserved for these. Children who attend a feeder school remain eligible for Category 4.`,
+        allocation: "80% of remaining places",
       });
     }
 
     if (isCatchment) {
       results.push({
         name: "Category 5",
-        description: `${prefix} is in the Catchment Area — any remaining places after Categories 1–4.`,
-        allocation: "Remaining places",
+        description: `${prefix} is in the Wider Catchment Area — any places remaining after Categories 1–4 have been allocated are reserved for these. Children who attend a feeder school or live in a priority home postcode remain eligible for Category 5.`,
+        allocation: "Any remaining places",
       });
     }
   }
