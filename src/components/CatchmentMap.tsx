@@ -334,9 +334,9 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
   };
 
   const legendItems = [
-    { key: "cat3", color: CAT3_COLOR, label: "Cat 3 — 4.6 mi radius" },
-    { key: "cat4", color: CAT4_COLOR, label: "Cat 4 — Local postcodes" },
-    { key: "cat5", color: CAT5_COLOR, label: "Cat 5 — Wider area" },
+    { key: "cat3", color: CAT3_COLOR, label: "Cat 3 — Feeder Primary Schools" },
+    { key: "cat4", color: CAT4_COLOR, label: "Cat 4 — Priority Home Postcodes" },
+    { key: "cat5", color: CAT5_COLOR, label: "Cat 5 — Wider Catchment Area" },
   ];
 
   return (
