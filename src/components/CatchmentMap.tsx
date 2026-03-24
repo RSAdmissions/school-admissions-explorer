@@ -356,11 +356,11 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && selectedSchool && handleSearch()}
-                placeholder="Enter your postcode or address…"
+               placeholder="Enter your home postcode or address…"
                 className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
               {searchQuery && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={clearSearch} className="absolute right-14 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors">
                   <X className="h-4 w-4" />
                 </button>
               )}
