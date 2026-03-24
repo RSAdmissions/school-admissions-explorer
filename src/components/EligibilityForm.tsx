@@ -178,7 +178,8 @@ const InfoTooltip = ({ text }: { text: string }) => {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-card border border-border rounded-xl shadow-xl text-xs font-body text-foreground leading-relaxed z-50"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-card border border-border rounded-xl shadow-xl text-xs font-body text-foreground leading-relaxed z-[9999]"
+            style={{ pointerEvents: "auto" }}
           >
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-card border-r border-b border-border" />
             {text}
