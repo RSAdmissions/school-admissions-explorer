@@ -662,8 +662,8 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <MapPinIcon className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-body font-semibold text-foreground">Your Postcode</span>
-                    <InfoTooltip text={STEP_TOOLTIPS.postcode} />
+                    <span className="text-sm font-body font-semibold text-foreground">Your Home Postcode</span>
+                    <InfoTooltip text="Your priority home postcode determines whether you fall into a Priority Home Postcode area (Category 4) or the Wider Catchment Area (Category 5)." />
                   </div>
                   <input
                     type="text"
