@@ -820,7 +820,11 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
               </div>
 
               <p className="text-[11px] text-muted-foreground font-body italic mt-4">
-                ⚠️ Indicative only. Please refer to the official Reading School admissions policy for definitive information.
+                ⚠️ Indicative only. Please refer to the{" "}
+                <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                  official Reading School admissions policy
+                </a>{" "}
+                for definitive information.
               </p>
             </motion.div>
           )}
