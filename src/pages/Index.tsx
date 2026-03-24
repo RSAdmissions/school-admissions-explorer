@@ -6,6 +6,7 @@ import EligibilityForm from "@/components/EligibilityForm";
 import TriageFlow from "@/components/TriageFlow";
 import type { TriageResult } from "@/components/TriageFlow";
 import type { CatchmentResult } from "@/components/CatchmentMap";
+import { CAT4_POSTCODES_LIST, CAT5_ONLY_POSTCODES_LIST } from "@/data/postcodeAreas";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -266,7 +267,7 @@ const Index = () => {
                       Search your address to see which categories you may be eligible for.
                     </p>
                   </motion.div>
-                  <CatchmentMap onResult={setCatchmentResult} externalPostcode={formPostcode} />
+                  <CatchmentMap onResult={setCatchmentResult} externalPostcode={formPostcode} entryType={triageResult?.entryType} />
 
                   {/* Persistent prompt to go to eligibility */}
                   <motion.div
@@ -295,6 +296,36 @@ const Index = () => {
                       <ArrowRight className="h-4 w-4" />
                     </motion.button>
                   </motion.div>
+
+                  {/* Postcode reference lists */}
+                  <div className="grid md:grid-cols-2 gap-3 mt-4">
+                    <div className="p-4 bg-card border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#4caf7a" }} />
+                        <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Priority Home Postcodes</h4>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {CAT4_POSTCODES_LIST.map((pc) => (
+                          <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                            {pc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-card border border-border rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#e6952e" }} />
+                        <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Wider Catchment Area Home Postcodes</h4>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {CAT5_ONLY_POSTCODES_LIST.map((pc) => (
+                          <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                            {pc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -335,7 +366,10 @@ const Index = () => {
 
           <footer className="border-t border-border py-6 text-center">
             <p className="text-[11px] text-muted-foreground font-body">
-              Indicative information only. Refer to the official Reading School admissions policy.
+              Indicative information only. Refer to the{" "}
+              <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                official Reading School admissions policy
+              </a>.
             </p>
           </footer>
         </motion.div>

@@ -158,7 +158,7 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                   </motion.div>
                   <div>
                     <h3 className="text-lg font-heading font-bold text-foreground">
-                      Date of Birth
+                      Child's Date of Birth
                     </h3>
                     <p className="text-xs text-muted-foreground font-body">
                       This determines the entry point for your child
@@ -195,9 +195,10 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                       </p>
                     )}
                     {entryType === "in-year" && (
-                      <p className="text-xs text-muted-foreground font-body">
-                        Your child is of secondary school age and would apply for an in-year transfer.
-                      </p>
+                      <div className="text-xs text-muted-foreground font-body space-y-1.5">
+                        <p>Your child is of secondary school age and would apply for an in-year transfer.</p>
+                        <p>In-year admissions are for children who need to join or change school outside the normal Year 7 entry round. Places are subject to availability and eligibility criteria apply.</p>
+                      </div>
                     )}
                     {entryType === "sixth-form" && (
                       <p className="text-xs text-muted-foreground font-body">
@@ -317,7 +318,11 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                 </div>
 
                 <p className="text-xs text-muted-foreground font-body mt-4 italic">
-                  For full details on Sixth Form admissions criteria, entry requirements, and how to apply, please visit the Reading School website or contact the admissions office.
+                  For full details on Sixth Form admissions criteria, entry requirements, and how to apply, please visit the{" "}
+                  <a href="https://www.reading-school.co.uk/page/?title=Reading+School+%2D+Year+12+Entry&pid=96" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                    Reading School - Year 12 Entry
+                  </a>{" "}
+                  page.
                 </p>
 
                 <div className="flex gap-3 mt-8">
@@ -398,9 +403,18 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                       </span>
                       <p className="text-[11px] text-muted-foreground font-body mt-1">
                         {type === "day"
-                          ? "Must live within catchment area"
-                          : "Lives at school during term time"}
+                          ? "Education is free."
+                          : "Lives at school from Monday to Friday. Pays for board and lodging only."}
                       </p>
+                      <a
+                        href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] text-primary underline hover:opacity-80 font-body mt-1 inline-block"
+                      >
+                        Link to Policy
+                      </a>
                     </motion.button>
                   ))}
                 </div>

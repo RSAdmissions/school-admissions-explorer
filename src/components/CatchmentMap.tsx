@@ -47,6 +47,7 @@ export interface CatchmentResult {
 interface CatchmentMapProps {
   onResult?: (result: CatchmentResult | null) => void;
   externalPostcode?: string;
+  entryType?: "year7" | "in-year" | "sixth-form" | null;
 }
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   "Category 3": "Named feeder primary school — 50% of remaining places after Categories 1 & 2.",
@@ -82,7 +83,7 @@ const CategoryBadge = ({ category }: { category: string }) => {
   );
 };
 
-const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
+const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -194,12 +195,12 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
             const category = isCat4 ? "cat4" : "cat5";
             const name = POSTCODE_NAMES[code] || code;
             
-            const layer = L.geoJSON(feature, {
+             const layer = L.geoJSON(feature, {
               style: {
-                color,
+                color: color,
                 fillColor: color,
                 fillOpacity: 0.1,
-                weight: 1.5,
+                weight: 2.5,
               },
             }).addTo(map);
             layer.bindTooltip(name, { sticky: true, className: "map-tooltip" });
@@ -241,10 +242,11 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   const handleSearch = async (queryOverride?: string) => {
     const q = (queryOverride ?? searchQuery).trim();
     if (!q) {
-      setSearchError("Please enter a postcode.");
+      setSearchError("Please enter a home postcode.");
       return;
     }
-    if (!selectedSchool) {
+    const needsSchool = entryType !== "in-year";
+    if (needsSchool && !selectedSchool) {
       setSearchError("Please select a primary school.");
       return;
     }
@@ -333,9 +335,9 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
   };
 
   const legendItems = [
-    { key: "cat3", color: CAT3_COLOR, label: "Cat 3 — 4.6 mi radius" },
-    { key: "cat4", color: CAT4_COLOR, label: "Cat 4 — Local postcodes" },
-    { key: "cat5", color: CAT5_COLOR, label: "Cat 5 — Wider area" },
+    { key: "cat3", color: CAT3_COLOR, label: "Cat 3 — Feeder Primary Schools" },
+    { key: "cat4", color: CAT4_COLOR, label: "Cat 4 — Priority Home Postcodes" },
+    { key: "cat5", color: CAT5_COLOR, label: "Cat 5 — Wider Catchment Area" },
   ];
 
   return (
@@ -354,92 +356,107 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && selectedSchool && handleSearch()}
-                placeholder="Enter your postcode or address…"
-                className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
-              />
-              {searchQuery && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Primary school selector */}
-            <div className="relative" ref={schoolDropdownRef}>
-              <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                value={selectedSchool ? selectedSchool : schoolSearch}
-                onChange={(e) => {
-                  setSchoolSearch(e.target.value);
-                  setSelectedSchool("");
-                  setShowSchoolDropdown(true);
-                }}
-                onFocus={() => setShowSchoolDropdown(true)}
-                placeholder="Select primary school…"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Enter your home postcode or address…"
                 className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {selectedSchool && (
-                  <button
-                    onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
-                    className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                {searchQuery && (
+                  <button onClick={clearSearch} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
                     <X className="h-4 w-4" />
                   </button>
                 )}
-                <button
-                  onClick={() => handleSearch()}
-                  disabled={isSearching || !searchQuery.trim() || !selectedSchool}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
-                >
-                  {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
-                </button>
-              </div>
-              {showSchoolDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
-                  {(schoolSearch
-                    ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(schoolSearch.toLowerCase()))
-                    : FEEDER_SCHOOLS
-                  ).map((school) => (
-                    <button
-                      key={school}
-                      onClick={() => {
-                        setSelectedSchool(school);
-                        setSchoolSearch("");
-                        setShowSchoolDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm font-body text-foreground hover:bg-primary/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                    >
-                      {school}
-                    </button>
-                  ))}
+                {entryType === "in-year" && (
                   <button
-                    onClick={() => {
-                      setSelectedSchool("Other (not listed)");
-                      setSchoolSearch("");
-                      setShowSchoolDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm font-body text-muted-foreground italic hover:bg-primary/10 transition-colors last:rounded-b-xl"
+                    onClick={() => handleSearch()}
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
                   >
-                    Other (not listed)
+                    {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
                   </button>
-                </div>
-              )}
-            </div>
-
-            {/* Selected school badge */}
-            {selectedSchool && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
-                <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-xs font-body text-foreground truncate">{selectedSchool}</span>
-                {FEEDER_SCHOOLS.includes(selectedSchool) && (
-                  <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-body font-semibold whitespace-nowrap">
-                    Feeder School ✓
-                  </span>
                 )}
               </div>
+            </div>
+
+            {/* Primary school selector - only for Year 7 */}
+            {entryType !== "in-year" && (
+              <>
+                <div className="relative" ref={schoolDropdownRef}>
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={selectedSchool ? selectedSchool : schoolSearch}
+                    onChange={(e) => {
+                      setSchoolSearch(e.target.value);
+                      setSelectedSchool("");
+                      setShowSchoolDropdown(true);
+                    }}
+                    onFocus={() => setShowSchoolDropdown(true)}
+                    placeholder="Select primary school…"
+                    className="w-full pl-11 pr-24 py-3 bg-card/95 backdrop-blur-md text-foreground border border-border/50 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-body text-sm shadow-lg"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {selectedSchool && (
+                      <button
+                        onClick={() => { setSelectedSchool(""); setSchoolSearch(""); }}
+                        className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleSearch()}
+                      disabled={isSearching || !searchQuery.trim() || !selectedSchool}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-body text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-60"
+                    >
+                      {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Search"}
+                    </button>
+                  </div>
+                  {showSchoolDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                      {(schoolSearch
+                        ? FEEDER_SCHOOLS.filter((s) => s.toLowerCase().includes(schoolSearch.toLowerCase()))
+                        : FEEDER_SCHOOLS
+                      ).map((school) => (
+                        <button
+                          key={school}
+                          onClick={() => {
+                            setSelectedSchool(school);
+                            setSchoolSearch("");
+                            setShowSchoolDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm font-body text-foreground hover:bg-primary/10 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                        >
+                          {school}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setSelectedSchool("Other (not listed)");
+                          setSchoolSearch("");
+                          setShowSchoolDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm font-body text-muted-foreground italic hover:bg-primary/10 transition-colors last:rounded-b-xl"
+                      >
+                        Other (not listed)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected school badge */}
+                {selectedSchool && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-card/95 backdrop-blur-md border border-border/50 rounded-xl shadow-lg">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-xs font-body text-foreground truncate">{selectedSchool}</span>
+                    {FEEDER_SCHOOLS.includes(selectedSchool) && (
+                      <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-body font-semibold whitespace-nowrap">
+                        Feeder School ✓
+                      </span>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Search result card */}
@@ -512,38 +529,11 @@ const CatchmentMap = ({ onResult, externalPostcode }: CatchmentMapProps) => {
         </div>
       </div>
 
-      {/* Postcode reference */}
-      <div className="grid md:grid-cols-2 gap-3 pt-4">
-        <div className="p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAT4_COLOR }} />
-            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Category 4 Postcodes</h4>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {CAT4_POSTCODES_LIST.map((pc) => (
-              <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
-                {pc}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAT5_COLOR }} />
-            <h4 className="text-xs font-semibold font-body text-foreground uppercase tracking-wider">Category 5 Additional</h4>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {CAT5_ONLY_POSTCODES_LIST.map((pc) => (
-              <span key={pc} className="text-[11px] font-body font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
-                {pc}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <p className="text-[11px] text-muted-foreground font-body italic pt-2">
-        ⚠️ Boundaries shown are approximate and for indicative purposes only. Please refer to the official admissions policy.
+        ⚠️ Boundaries shown are approximate and for indicative purposes only. Please refer to the{" "}
+        <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+          official admissions policy
+        </a>.
       </p>
     </div>
   );

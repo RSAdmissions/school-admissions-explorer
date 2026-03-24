@@ -82,8 +82,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (data.hasEHCP) {
     results.push({
       name: "Category 0",
-      description: "EHCP — place allocated as long as an eligible score is achieved.",
-      allocation: "As needed",
+      description: "Education & Health Care Plan – a place will be allocated as long as an eligible score is achieved.",
+      allocation: "As many places as needed",
       highlight: true,
     });
   }
@@ -98,8 +98,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (cat1Reasons.length > 0) {
     results.push({
       name: "Category 1",
-      description: `${cat1Reasons.join(", ")} — as many places as apply and achieve an eligible score, prioritised in the order listed.`,
-      allocation: "As many as qualify",
+      description: `(Previously) Looked After / Adopted, Pupil Premium, Service Premium, Social & Welfare Need, Child of Staff — as many places as apply and achieve an eligible score, prioritised in the order listed. Catchment area requirement applies for all Category 1 except (Previously) Looked After/Adopted.`,
+      allocation: "As many places as needed",
       highlight: true,
     });
   }
@@ -107,8 +107,8 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
   if (data.hasSportingAptitude) {
     results.push({
       name: "Category 2",
-      description: "Sporting Aptitude — 15 places reserved across day and boarding.",
-      allocation: "15 places total",
+      description: "Sporting Aptitude — 15 places reserved across day and boarding. Based on results of Sporting Aptitude assessment.",
+      allocation: "15 places available",
     });
   }
 
@@ -116,24 +116,24 @@ function calculateEligibility(data: FormData, entryType: EntryType, placeType: "
     if (!isInYear && isFeeder) {
       results.push({
         name: "Category 3",
-        description: `${data.primarySchool} is a named Reading feeder school — 50% of remaining places after Categories 1 & 2.`,
-        allocation: "50% of remaining",
+        description: `${data.primarySchool} is a named feeder school — 50% of places remaining after Categories 1 & 2 have been allocated are reserved for these.`,
+        allocation: "50% of remaining places",
       });
     }
 
     if (isPriority) {
       results.push({
         name: "Category 4",
-        description: `${prefix} is a Priority Postcode — 80% of remaining places after Categories 1–3.`,
-        allocation: "80% of remaining",
+        description: `${prefix} is a Priority Home Postcode — 80% of places remaining after Categories 1–3 have been allocated are reserved for these. Children who attend a feeder school remain eligible for Category 4.`,
+        allocation: "80% of remaining places",
       });
     }
 
     if (isCatchment) {
       results.push({
         name: "Category 5",
-        description: `${prefix} is in the Catchment Area — any remaining places after Categories 1–4.`,
-        allocation: "Remaining places",
+        description: `${prefix} is in the Wider Catchment Area — any places remaining after Categories 1–4 have been allocated are reserved for these. Children who attend a feeder school or live in a priority home postcode remain eligible for Category 5.`,
+        allocation: "Any remaining places",
       });
     }
   }
@@ -178,7 +178,8 @@ const InfoTooltip = ({ text }: { text: string }) => {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-card border border-border rounded-xl shadow-xl text-xs font-body text-foreground leading-relaxed z-50"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-card border border-border rounded-xl shadow-xl text-xs font-body text-foreground leading-relaxed z-[9999]"
+            style={{ pointerEvents: "auto" }}
           >
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-card border-r border-b border-border" />
             {text}
@@ -346,7 +347,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
   const isLastBeforeResults = step === steps.indexOf("results") - 1;
 
   return (
-    <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-hidden">
+    <div ref={containerRef} className="bg-card border border-border rounded-2xl overflow-visible">
       {/* Progress bar */}
       {step > 0 && currentStepName !== "results" && (
         <div className="h-1 bg-secondary">
@@ -380,10 +381,14 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
               transition={{ duration: 0.3 }}
             >
               <QuestionHeader icon={AlertCircle} title="Before You Begin" subtitle="Important information" />
-              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-6">
+              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
                 This tool provides <strong className="text-foreground">indicative information only</strong> and does not guarantee
-                a place at Reading School. Category eligibility and place availability are subject to change.
-                You must read the official admissions policy for definitive guidance.
+                a place at Reading School. The number and origin of children who register and apply each year varies.
+                You must read the{" "}
+                <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                  official admissions policy
+                </a>{" "}
+                for definitive guidance.
               </p>
               <motion.label
                 whileHover={{ scale: 1.005 }}
@@ -396,7 +401,10 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                   className="mt-0.5 h-4 w-4 accent-primary"
                 />
                 <span className="text-sm font-body text-foreground leading-relaxed">
-                  I understand this is indicative only and will read the official admissions policy.
+                  I understand this is indicative only and will read the{" "}
+                  <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                    official admissions policy
+                  </a>.
                 </span>
               </motion.label>
               <motion.button
@@ -534,7 +542,7 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                 tooltip={STEP_TOOLTIPS.sporting}
               />
               <p className="text-sm text-muted-foreground font-body mb-4">
-                Will your child be applying under the Sporting Aptitude criteria? (15 places reserved across day & boarding)
+                Will your child be participating in the Sporting Aptitude Assessment? (15 places reserved across day & boarding)
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {[true, false].map((val, i) => (
@@ -654,8 +662,8 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <MapPinIcon className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-body font-semibold text-foreground">Your Postcode</span>
-                    <InfoTooltip text={STEP_TOOLTIPS.postcode} />
+                    <span className="text-sm font-body font-semibold text-foreground">Your Home Postcode</span>
+                    <InfoTooltip text="Your priority home postcode determines whether you fall into a Priority Home Postcode area (Category 4) or the Wider Catchment Area (Category 5)." />
                   </div>
                   <input
                     type="text"
@@ -695,9 +703,9 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
             >
               <QuestionHeader
                 icon={MapPinIcon}
-                title="Your Postcode"
+                title="Your Home Postcode"
                 subtitle={`Question ${questionNumber} of ${totalQuestions}`}
-                tooltip={STEP_TOOLTIPS.postcode}
+                tooltip="Your priority home postcode determines whether you fall into a Priority Home Postcode area (Category 4) or the Wider Catchment Area (Category 5)."
               />
               <input
                 type="text"
@@ -812,7 +820,11 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
               </div>
 
               <p className="text-[11px] text-muted-foreground font-body italic mt-4">
-                ⚠️ Indicative only. Please refer to the official Reading School admissions policy for definitive information.
+                ⚠️ Indicative only. Please refer to the{" "}
+                <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                  official Reading School admissions policy
+                </a>{" "}
+                for definitive information.
               </p>
             </motion.div>
           )}
