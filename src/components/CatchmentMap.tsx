@@ -242,10 +242,11 @@ const CatchmentMap = ({ onResult, externalPostcode, entryType }: CatchmentMapPro
   const handleSearch = async (queryOverride?: string) => {
     const q = (queryOverride ?? searchQuery).trim();
     if (!q) {
-      setSearchError("Please enter a postcode.");
+      setSearchError("Please enter a home postcode.");
       return;
     }
-    if (!selectedSchool) {
+    const needsSchool = entryType !== "in-year";
+    if (needsSchool && !selectedSchool) {
       setSearchError("Please select a primary school.");
       return;
     }
