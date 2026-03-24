@@ -402,9 +402,18 @@ const TriageFlow = ({ onComplete, onBack }: TriageFlowProps) => {
                       </span>
                       <p className="text-[11px] text-muted-foreground font-body mt-1">
                         {type === "day"
-                          ? "Must live within catchment area"
-                          : "Lives at school during term time"}
+                          ? "Education is free."
+                          : "Lives at school from Monday to Friday. Pays for board and lodging only."}
                       </p>
+                      <a
+                        href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] text-primary underline hover:opacity-80 font-body mt-1 inline-block"
+                      >
+                        Link to Policy
+                      </a>
                     </motion.button>
                   ))}
                 </div>
