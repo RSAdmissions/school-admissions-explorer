@@ -381,10 +381,14 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
               transition={{ duration: 0.3 }}
             >
               <QuestionHeader icon={AlertCircle} title="Before You Begin" subtitle="Important information" />
-              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-6">
+              <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
                 This tool provides <strong className="text-foreground">indicative information only</strong> and does not guarantee
-                a place at Reading School. Category eligibility and place availability are subject to change.
-                You must read the official admissions policy for definitive guidance.
+                a place at Reading School. The number and origin of children who register and apply each year varies.
+                You must read the{" "}
+                <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80">
+                  official admissions policy
+                </a>{" "}
+                for definitive guidance.
               </p>
               <motion.label
                 whileHover={{ scale: 1.005 }}
@@ -397,7 +401,10 @@ const EligibilityForm = ({ catchmentResult, onPostcodeChange, entryType, placeTy
                   className="mt-0.5 h-4 w-4 accent-primary"
                 />
                 <span className="text-sm font-body text-foreground leading-relaxed">
-                  I understand this is indicative only and will read the official admissions policy.
+                  I understand this is indicative only and will read the{" "}
+                  <a href="https://www.reading-school.co.uk/page/?title=Admissions+Policies&pid=56" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                    official admissions policy
+                  </a>.
                 </span>
               </motion.label>
               <motion.button
